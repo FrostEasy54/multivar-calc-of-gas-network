@@ -11,10 +11,8 @@ class ObjectsTable():
         object_name_item = self.ObjectsTableWidget.item(
             self.ObjectsTableWidget.rowCount() - 1, 2)
         if object_name_item is None or object_name_item.text().strip() == "":
-            message_box = QMessageBox()
-            message_box.warning(
+            QMessageBox().warning(
                 None, "Пустое поле", "Пожалуйста, введите условное обозначение объекта.")  # noqa E501
-            message_box.setFixedSize(500, 200)
             return
         self.ObjectsTableWidget.insertRow(self.ObjectsTableWidget.rowCount())
         self.ObjectsTypeComboBox()
@@ -22,10 +20,8 @@ class ObjectsTable():
 
     def RemoveObjectsRow(self):
         if self.ObjectsTableWidget.rowCount() == 1:
-            message_box = QMessageBox()
-            message_box.warning(
+            QMessageBox().warning(
                 None, "Единственная строка", "Вы не можете удалить единственную строку в таблице.")  # noqa E501
-            message_box.setFixedSize(500, 200)
             return
         else:
             self.ObjectsTableWidget.removeRow(

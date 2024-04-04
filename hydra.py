@@ -31,10 +31,8 @@ class HydraTable():
 
     def RemoveHydraRow(self):
         if self.HydraTableWidget.rowCount() == 1:
-            message_box = QMessageBox()
-            message_box.warning(
+            QMessageBox().warning(
                 None, "Единственная строка", "Вы не можете удалить единственную строку в таблице.")  # noqa E501
-            message_box.setFixedSize(500, 200)
             return
         else:
             self.HydraTableWidget.removeRow(
@@ -77,17 +75,40 @@ class HydraTable():
                 row, 2).addItems(objects_name_list)
 
     def BuildTopology(self):
-        graph = nx.MultiGraph()
+        graph = nx.MultiDiGraph()
         graph.add_nodes_from(objects_name_list)
         for row in range(self.HydraTableWidget.rowCount()):
-            beginning_object = self.HydraTableWidget.cellWidget(row, 1).currentText()
+            beginning_object = self.HydraTableWidget.cellWidget(
+                row, 1).currentText()
             end_object = self.HydraTableWidget.cellWidget(row, 2).currentText()
             graph.add_edge(beginning_object, end_object)
+
+        if not self.IsGraphConnected(graph):
+            self.ShowTopologyPushButton.setEnabled(False)
+            return
+        self.ShowTopologyPushButton.setEnabled(True)
         # Визуализация графа
         A = nx.nx_agraph.to_agraph(graph)
         A.layout('dot')
-        A.draw(f"topology{self.HydraTableWidget.rowCount()}.png")
+        A.draw(f"graphs_pic/topology{self.HydraTableWidget.rowCount()}.png")
 
     def ShowTopology(self):
-        image_path = f"topology{self.HydraTableWidget.rowCount()}.png"
+        image_path = f"graphs_pic/topology{self.HydraTableWidget.rowCount()}.png"  # noqa E501
         ImageDialog(image_path)
+
+    def IsGraphConnected(self, graph):
+        is_connected = nx.is_weakly_connected(graph)
+        if is_connected:
+            return True
+        if not is_connected:
+            msgBox = QMessageBox()
+            msgBox.setWindowTitle("Cвязность графа")
+            msgBox.setText(
+                "Граф не связан, вы уверены, что хотите продолжить?")
+            msgBox.addButton(QMessageBox.StandardButton.Yes).setText("Да")
+            msgBox.addButton(QMessageBox.StandardButton.No).setText("Нет")
+            reply = msgBox.exec()
+            if reply == QMessageBox.StandardButton.Yes:
+                return True
+            else:
+                return False

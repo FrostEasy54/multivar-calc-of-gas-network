@@ -48,117 +48,11 @@
               <item>
                <layout class="QHBoxLayout" name="CityHorizontalLayout">
                 <item>
-                 <widget class="QLabel" name="CityLabel">
-                  <property name="text">
-                   <string>Город</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QPushButton" name="ExportObjectsOnHydraPushButton">
                   <property name="text">
                    <string>Перенести объекты</string>
                   </property>
                  </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="TempOutsideHorizontalLayout">
-                <property name="spacing">
-                 <number>6</number>
-                </property>
-                <item>
-                 <widget class="QLabel" name="TempOutsideLabel">
-                  <property name="text">
-                   <string>t наружного воздуха:</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QLabel" name="TempOutsideValueLabel">
-                  <property name="text">
-                   <string/>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <spacer name="horizontalSpacer_2">
-                <property name="orientation">
-                 <enum>Qt::Horizontal</enum>
-                </property>
-                <property name="sizeHint" stdset="0">
-                 <size>
-                  <width>40</width>
-                  <height>20</height>
-                 </size>
-                </property>
-               </spacer>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="SeasonHorizontalLayout">
-                <item>
-                 <widget class="QLabel" name="SeasonLabel">
-                  <property name="text">
-                   <string>Период года</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="SeasonComboBox">
-                  <item>
-                   <property name="text">
-                    <string>Теплый</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>Холодный</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item>
-                 <spacer name="horizontalSpacer_3">
-                  <property name="orientation">
-                   <enum>Qt::Horizontal</enum>
-                  </property>
-                  <property name="sizeHint" stdset="0">
-                   <size>
-                    <width>40</width>
-                    <height>20</height>
-                   </size>
-                  </property>
-                 </spacer>
-                </item>
-               </layout>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="WindSpeedHorizontalLayout">
-                <item>
-                 <widget class="QLabel" name="WindSpeedLabel">
-                  <property name="text">
-                   <string>V, м/с</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QDoubleSpinBox" name="WindSpeedDoubleSpinBox"/>
                 </item>
                </layout>
               </item>
@@ -262,11 +156,25 @@
            </attribute>
            <layout class="QGridLayout" name="gridLayout_4">
             <item row="0" column="0">
-             <widget class="QPushButton" name="BuildTopologyPushButton">
-              <property name="text">
-               <string>Построить топологию</string>
-              </property>
-             </widget>
+             <layout class="QHBoxLayout" name="horizontalLayout_2">
+              <item>
+               <widget class="QPushButton" name="BuildTopologyPushButton">
+                <property name="text">
+                 <string>Построить топологию</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="ShowTopologyPushButton">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="text">
+                 <string>Показать топологию</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </item>
             <item row="1" column="0">
              <widget class="QTableWidget" name="HydraTableWidget">
@@ -313,13 +221,6 @@
              </widget>
             </item>
             <item row="2" column="0">
-             <widget class="QPushButton" name="ShowTopologyPushButton">
-              <property name="text">
-               <string>Показать топологию</string>
-              </property>
-             </widget>
-            </item>
-            <item row="3" column="0">
              <layout class="QHBoxLayout" name="HydraPushButtonHorizontalLayout">
               <item>
                <widget class="QPushButton" name="AddRowHydraPushButton">
