@@ -1,0 +1,683 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>991</width>
+    <height>692</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="CentralWidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0">
+     <widget class="QScrollArea" name="scrollArea">
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="scrollAreaWidgetContents">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>971</width>
+         <height>631</height>
+        </rect>
+       </property>
+       <layout class="QGridLayout" name="gridLayout_2">
+        <item row="0" column="0">
+         <widget class="QTabWidget" name="tabWidget">
+          <property name="enabled">
+           <bool>true</bool>
+          </property>
+          <property name="currentIndex">
+           <number>0</number>
+          </property>
+          <widget class="QWidget" name="ObjectsWidget">
+           <attribute name="title">
+            <string>Объекты</string>
+           </attribute>
+           <layout class="QGridLayout" name="gridLayout_3">
+            <item row="0" column="0">
+             <layout class="QHBoxLayout" name="horizontalLayout">
+              <item>
+               <layout class="QHBoxLayout" name="CityHorizontalLayout">
+                <item>
+                 <widget class="QLabel" name="CityLabel">
+                  <property name="text">
+                   <string>Город</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="ExportObjectsOnHydraPushButton">
+                  <property name="text">
+                   <string>Перенести объекты</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="TempOutsideHorizontalLayout">
+                <property name="spacing">
+                 <number>6</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="TempOutsideLabel">
+                  <property name="text">
+                   <string>t наружного воздуха:</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="TempOutsideValueLabel">
+                  <property name="text">
+                   <string/>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <spacer name="horizontalSpacer_2">
+                <property name="orientation">
+                 <enum>Qt::Horizontal</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>40</width>
+                  <height>20</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="SeasonHorizontalLayout">
+                <item>
+                 <widget class="QLabel" name="SeasonLabel">
+                  <property name="text">
+                   <string>Период года</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="SeasonComboBox">
+                  <item>
+                   <property name="text">
+                    <string>Теплый</string>
+                   </property>
+                  </item>
+                  <item>
+                   <property name="text">
+                    <string>Холодный</string>
+                   </property>
+                  </item>
+                 </widget>
+                </item>
+                <item>
+                 <spacer name="horizontalSpacer_3">
+                  <property name="orientation">
+                   <enum>Qt::Horizontal</enum>
+                  </property>
+                  <property name="sizeHint" stdset="0">
+                   <size>
+                    <width>40</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                 </spacer>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="WindSpeedHorizontalLayout">
+                <item>
+                 <widget class="QLabel" name="WindSpeedLabel">
+                  <property name="text">
+                   <string>V, м/с</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QDoubleSpinBox" name="WindSpeedDoubleSpinBox"/>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+            <item row="1" column="0">
+             <layout class="QVBoxLayout" name="RoomTableRoomButtonsVerticalLayout">
+              <item>
+               <widget class="QTableWidget" name="ObjectsTableWidget">
+                <row>
+                 <property name="text">
+                  <string>1</string>
+                 </property>
+                </row>
+                <column>
+                 <property name="text">
+                  <string>№</string>
+                 </property>
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Тип объекта</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Условное обозначение</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Pгр, Па</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>Qн, м3/ч</string>
+                 </property>
+                </column>
+                <column>
+                 <property name="text">
+                  <string>P(ф), Па</string>
+                 </property>
+                </column>
+                <item row="0" column="0">
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                </item>
+                <item row="0" column="1">
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="toolTip">
+                  <string/>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="HeatInputPushButton">
+                <property name="text">
+                 <string>Рассчитать теплопоступления</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="PushButtonHorizontalLayout">
+                <item>
+                 <widget class="QPushButton" name="AddRowObjectsPushButton">
+                  <property name="text">
+                   <string>Добавить строку</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="RemoveRowObjectsPushButton">
+                  <property name="text">
+                   <string>Удалить строку</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="HydraWidget">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <attribute name="title">
+            <string>Гидравлика</string>
+           </attribute>
+           <layout class="QGridLayout" name="gridLayout_4">
+            <item row="0" column="0">
+             <widget class="QPushButton" name="BuildTopologyPushButton">
+              <property name="text">
+               <string>Построить топологию</string>
+              </property>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QTableWidget" name="HydraTableWidget">
+              <row>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </row>
+              <column>
+               <property name="text">
+                <string>№ Участка</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Начало участка</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Конец участка</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>L</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Q пут</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Тип трубы</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string/>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="ShowTopologyPushButton">
+              <property name="text">
+               <string>Показать топологию</string>
+              </property>
+             </widget>
+            </item>
+            <item row="3" column="0">
+             <layout class="QHBoxLayout" name="HydraPushButtonHorizontalLayout">
+              <item>
+               <widget class="QPushButton" name="AddRowHydraPushButton">
+                <property name="text">
+                 <string>Добавить строку</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="RemoveRowHydraPushButton">
+                <property name="text">
+                 <string>Удалить строку</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="EquipmentWidget">
+           <attribute name="title">
+            <string>Оборудование</string>
+           </attribute>
+           <layout class="QGridLayout" name="gridLayout_5">
+            <item row="0" column="0">
+             <widget class="QTableWidget" name="EquipmentTableWidget">
+              <row>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </row>
+              <column>
+               <property name="text">
+                <string>№ Помещения</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Тип прибора</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Загрузка прибора</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Мощность прибора, Вт/ч</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Кол-во</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Q прибор, Вт/ч</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="EquipmentHeatInputPushButton">
+              <property name="text">
+               <string>Рассчитать теплопоступления</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <layout class="QHBoxLayout" name="EquipmentPushButtonHorizontalLayout">
+              <item>
+               <widget class="QPushButton" name="AddRowEquipmentPushButton">
+                <property name="text">
+                 <string>Добавить строку</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="RemoveRowEquipmentPushButton">
+                <property name="text">
+                 <string>Удалить строку</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+          <widget class="QWidget" name="LampsWidget">
+           <attribute name="title">
+            <string>Освещение</string>
+           </attribute>
+           <layout class="QGridLayout" name="gridLayout_6">
+            <item row="0" column="0">
+             <widget class="QTableWidget" name="LampsTableWidget">
+              <row>
+               <property name="text">
+                <string>1</string>
+               </property>
+              </row>
+              <column>
+               <property name="text">
+                <string>№ Помещения</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Тип светильника</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Назначение светильника</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Кол-во</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Q свет, Вт/ч</string>
+               </property>
+              </column>
+             </widget>
+            </item>
+            <item row="1" column="0">
+             <widget class="QPushButton" name="LampsHeatInputPushButton">
+              <property name="text">
+               <string>Рассчитать теплопоступления</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <layout class="QHBoxLayout" name="LampsPushButtonHorizontalLayout">
+              <item>
+               <widget class="QPushButton" name="AddRowLampsPushButton">
+                <property name="text">
+                 <string>Добавить строку</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="RemoveRowLampsPushButton">
+                <property name="text">
+                 <string>Удалить строку</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+           </layout>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>991</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menu">
+    <property name="title">
+     <string>Файл</string>
+    </property>
+    <widget class="QMenu" name="SaveMenu">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="title">
+      <string>Сохранить</string>
+     </property>
+     <addaction name="ActionSaveRooms"/>
+     <addaction name="ActionSavePeople"/>
+     <addaction name="ActionSaveEquipment"/>
+     <addaction name="ActionSaveLamps"/>
+     <addaction name="separator"/>
+     <addaction name="ActionSaveAll"/>
+    </widget>
+    <widget class="QMenu" name="ImportMenu">
+     <property name="title">
+      <string>Импорт</string>
+     </property>
+     <addaction name="ActionImportRooms"/>
+     <addaction name="ActionImportPeople"/>
+     <addaction name="ActionImportEquipment"/>
+     <addaction name="ActionImportLamps"/>
+     <addaction name="separator"/>
+     <addaction name="ActionImportAll"/>
+    </widget>
+    <addaction name="ImportMenu"/>
+    <addaction name="SaveMenu"/>
+   </widget>
+   <widget class="QMenu" name="about">
+    <property name="title">
+     <string>Справка</string>
+    </property>
+    <addaction name="actionTutorial"/>
+    <addaction name="actionAuthors"/>
+    <addaction name="actionNormativeDocs"/>
+   </widget>
+   <widget class="QMenu" name="clear">
+    <property name="title">
+     <string>Очистить</string>
+    </property>
+    <addaction name="actionClearRooms"/>
+    <addaction name="actionClearPeople"/>
+    <addaction name="actionClearEquipment"/>
+    <addaction name="actionClearLamps"/>
+    <addaction name="separator"/>
+    <addaction name="actionClearAll"/>
+   </widget>
+   <widget class="QMenu" name="graphs">
+    <property name="title">
+     <string>Графики</string>
+    </property>
+    <addaction name="actionHeatInputGraph"/>
+   </widget>
+   <addaction name="menu"/>
+   <addaction name="clear"/>
+   <addaction name="graphs"/>
+   <addaction name="about"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="close_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Закрыть</string>
+   </property>
+  </action>
+  <action name="actionClearRooms">
+   <property name="text">
+    <string>Очистить лист Помещения</string>
+   </property>
+  </action>
+  <action name="actionClearPeople">
+   <property name="text">
+    <string>Очистить лист Люди</string>
+   </property>
+  </action>
+  <action name="actionClearEquipment">
+   <property name="text">
+    <string>Очистить лист Оборудование</string>
+   </property>
+  </action>
+  <action name="actionClearLamps">
+   <property name="text">
+    <string>Очистить лист Светильники</string>
+   </property>
+  </action>
+  <action name="actionClearAll">
+   <property name="text">
+    <string>Очистить Всё</string>
+   </property>
+  </action>
+  <action name="ActionSaveRooms">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Сохранить лист Помещения</string>
+   </property>
+  </action>
+  <action name="ActionSavePeople">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Сохранить лист Люди</string>
+   </property>
+  </action>
+  <action name="ActionSaveEquipment">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Сохранить лист Оборудование</string>
+   </property>
+  </action>
+  <action name="ActionSaveLamps">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Сохранить лист Освещение</string>
+   </property>
+  </action>
+  <action name="ActionSaveAll">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Сохранить все Листы в единый файл</string>
+   </property>
+  </action>
+  <action name="ActionImportRooms">
+   <property name="text">
+    <string>Импортировать лист Помещения</string>
+   </property>
+  </action>
+  <action name="ActionImportPeople">
+   <property name="text">
+    <string>Импортировать лист Люди</string>
+   </property>
+  </action>
+  <action name="ActionImportEquipment">
+   <property name="text">
+    <string>Импортировать лист Оборудование</string>
+   </property>
+  </action>
+  <action name="ActionImportLamps">
+   <property name="text">
+    <string>Импортировать лист Освещение</string>
+   </property>
+  </action>
+  <action name="ActionImportAll">
+   <property name="text">
+    <string>Импортировать все Листы из единого файла</string>
+   </property>
+  </action>
+  <action name="actionTutorial">
+   <property name="text">
+    <string>Руководство пользователя</string>
+   </property>
+  </action>
+  <action name="actionAuthors">
+   <property name="text">
+    <string>Авторы</string>
+   </property>
+  </action>
+  <action name="actionHeatInputGraph">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Графики Теплопоступлений</string>
+   </property>
+  </action>
+  <action name="actionNormativeDocs">
+   <property name="text">
+    <string>Нормативные документы</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
