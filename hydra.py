@@ -76,24 +76,45 @@ class HydraTable():
 
     def BuildTopology(self):
         graph = nx.MultiDiGraph()
+        if len(objects_name_list) == 0:
+            QMessageBox.warning(None, "Пустой список объектов",
+                                "Список объектов пуст. Добавьте объекты на листе Объекты!")  # noqa E501
+            return
+
         graph.add_nodes_from(objects_name_list)
         for row in range(self.HydraTableWidget.rowCount()):
-            beginning_object = self.HydraTableWidget.cellWidget(
-                row, 1).currentText()
-            end_object = self.HydraTableWidget.cellWidget(row, 2).currentText()
+            beginning_object_widget = self.HydraTableWidget.cellWidget(row, 1)
+            end_object_widget = self.HydraTableWidget.cellWidget(row, 2)
+            if beginning_object_widget is None or end_object_widget is None:
+                QMessageBox.warning(
+                    None, "Пустая ячейка", f"Строка {row + 1} содержит пустую ячейку. Пожалуйста, заполните все ячейки.")  # noqa E501
+                return
+            beginning_object = beginning_object_widget.currentText()
+            end_object = end_object_widget.currentText()
+            if not beginning_object or not end_object:
+                QMessageBox.warning(
+                    None, "Пустое значение", f"В строке {row + 1} есть пустое значение. Пожалуйста, заполните все значения.")  # noqa E501
+                return
             graph.add_edge(beginning_object, end_object)
 
-        if not self.IsGraphConnected(graph):
+        if not self.IsGraphConnected(graph):  # проверка связности графа
             self.ShowTopologyPushButton.setEnabled(False)
             return
+
+        if not self.IsConsumerConnected(graph):
+            QMessageBox.warning(None, "Нет связи", "Нет связи между объектами типа ГРП и Потребитель!")
+            return
+
         self.ShowTopologyPushButton.setEnabled(True)
         # Визуализация графа
         A = nx.nx_agraph.to_agraph(graph)
         A.layout('dot')
-        A.draw(f"graphs_pic/topology{self.HydraTableWidget.rowCount()}.png")
+        filename = f"graphs_pic/topology{graph.edges}.png"
+        A.draw(filename)
+        self.ShowTopology(filename)
 
-    def ShowTopology(self):
-        image_path = f"graphs_pic/topology{self.HydraTableWidget.rowCount()}.png"  # noqa E501
+    def ShowTopology(self, filename):
+        image_path = filename
         ImageDialog(image_path)
 
     def IsGraphConnected(self, graph):
@@ -112,3 +133,22 @@ class HydraTable():
                 return True
             else:
                 return False
+
+    def IsConsumerConnected(self, graph):
+        for beginning_object in objects_dict:
+            if objects_dict[beginning_object] == "ГРП":
+                visited = set()
+                stack = [beginning_object]
+
+                while stack:
+                    current_object = stack.pop()
+                    if current_object in visited:
+                        continue
+                    visited.add(current_object)
+
+                    if objects_dict[current_object] == "Потребитель":
+                        return True
+
+                    for neighbor in graph.neighbors(current_object):
+                        stack.append(neighbor)
+        return False

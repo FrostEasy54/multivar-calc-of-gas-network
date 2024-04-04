@@ -119,13 +119,6 @@
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="HeatInputPushButton">
-                <property name="text">
-                 <string>Рассчитать теплопоступления</string>
-                </property>
-               </widget>
-              </item>
-              <item>
                <layout class="QHBoxLayout" name="PushButtonHorizontalLayout">
                 <item>
                  <widget class="QPushButton" name="AddRowObjectsPushButton">
@@ -159,6 +152,9 @@
              <layout class="QHBoxLayout" name="horizontalLayout_2">
               <item>
                <widget class="QPushButton" name="BuildTopologyPushButton">
+                <property name="enabled">
+                 <bool>true</bool>
+                </property>
                 <property name="text">
                  <string>Построить топологию</string>
                 </property>
@@ -211,11 +207,6 @@
               <column>
                <property name="text">
                 <string>Тип трубы</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
-                <string/>
                </property>
               </column>
              </widget>
