@@ -97,12 +97,20 @@ class HydraTable():
                 return
             graph.add_edge(beginning_object, end_object)
 
-        if not self.IsGraphConnected(graph):  # проверка связности графа
-            self.ShowTopologyPushButton.setEnabled(False)
+        if not self.IsGRPInGraph(graph):  # проверка наличия ГРП в графе
+            QMessageBox.warning(
+                None, "Отсутствие ГРП",
+                "В графе отсутствуют объекты типа ГРП. Добавьте объекты ГРП на листе Объекты!")  # noqa E501
             return
 
+        # проверка связи между ГРП и Потребитель
         if not self.IsConsumerConnected(graph):
-            QMessageBox.warning(None, "Нет связи", "Нет связи между объектами типа ГРП и Потребитель!")
+            QMessageBox.warning(
+                None, "Нет связи", "Нет связи между объектами типа ГРП и Потребитель!")  # noqa E501
+            return
+
+        if not self.IsGraphConnected(graph):  # проверка связности графа
+            self.ShowTopologyPushButton.setEnabled(False)
             return
 
         self.ShowTopologyPushButton.setEnabled(True)
@@ -125,7 +133,7 @@ class HydraTable():
             msgBox = QMessageBox()
             msgBox.setWindowTitle("Cвязность графа")
             msgBox.setText(
-                "Граф не связан, вы уверены, что хотите продолжить?")
+                "Граф не связан. \nВы уверены, что хотите продолжить?")
             msgBox.addButton(QMessageBox.StandardButton.Yes).setText("Да")
             msgBox.addButton(QMessageBox.StandardButton.No).setText("Нет")
             reply = msgBox.exec()
@@ -133,6 +141,12 @@ class HydraTable():
                 return True
             else:
                 return False
+
+    def IsGRPInGraph(self, graph):
+        for node in graph.nodes():
+            if objects_dict.get(node) == "ГРП":
+                return True
+        return False
 
     def IsConsumerConnected(self, graph):
         for beginning_object in objects_dict:
