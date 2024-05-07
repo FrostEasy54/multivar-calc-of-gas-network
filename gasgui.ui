@@ -36,7 +36,7 @@
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>2</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="ObjectsWidget">
            <attribute name="title">
@@ -219,12 +219,12 @@
               </column>
               <column>
                <property name="text">
-                <string>L</string>
+                <string>L, м</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Q пут</string>
+                <string>Q пут, н.м3/ч</string>
                </property>
               </column>
               <column>
@@ -232,9 +232,34 @@
                 <string>Тип трубы</string>
                </property>
               </column>
+              <column>
+               <property name="text">
+                <string>Диаметр трубы, мм</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Скорость газа V, м/с</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Q на участке, н.м3/ч</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Давление в начале участка</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Давление в конце участка</string>
+               </property>
+              </column>
              </widget>
             </item>
-            <item row="3" column="0">
+            <item row="5" column="0">
              <layout class="QHBoxLayout" name="HydraPushButtonHorizontalLayout">
               <item>
                <widget class="QPushButton" name="AddRowHydraPushButton">
@@ -252,13 +277,20 @@
               </item>
              </layout>
             </item>
-            <item row="2" column="0">
+            <item row="3" column="0">
              <widget class="QPushButton" name="BuildTopologyPushButton">
               <property name="enabled">
                <bool>true</bool>
               </property>
               <property name="text">
                <string>Построить топологию</string>
+              </property>
+             </widget>
+            </item>
+            <item row="2" column="0">
+             <widget class="QPushButton" name="CalculatePushButton">
+              <property name="text">
+               <string>Рассчитать сеть </string>
               </property>
              </widget>
             </item>

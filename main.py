@@ -42,10 +42,16 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.RemoveRowHydraPushButton.clicked.connect(self.RemoveHydraRow)
         self.ShowTopologyPushButton.clicked.connect(self.ShowTopology)
         self.BuildTopologyPushButton.clicked.connect(self.BuildTopology)
+        self.CalculatePushButton.clicked.connect(self.CalculateAll)
         # заполнение первой строки
         self.HydraBeginningComboBox()
         self.HydraEndComboBox()
         self.HydraNumberSpinBox()
+        self.HydraLengthSpinBox()
+        self.HydraPathConsumptionDoubleSpinBox()
+        self.HydraPipeTypeComboBox()
+        self.HydraPipeDiameter()
+        self.HydraGasVelocity()
 
 
 def main():

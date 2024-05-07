@@ -1,67 +1,233 @@
+import numpy as np
 import networkx as nx
-import pygraphviz as pgv
+import math
+from prettytable import PrettyTable
 
-# Создаем ориентированный граф
-G = nx.MultiGraph()
+# Создаем граф
+G = nx.MultiDiGraph()
 
 # Добавляем узлы
-G.add_nodes_from(['П1', 2, 3, 4, 'П2', 6, 7, 8, 'П3', 10,
-                 11, 'ГРП', 13, 14, 15, 16, 'П4', 'П5'])
+nodes = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 'ГРП']
+G.add_nodes_from(nodes)
 
 # Добавляем ребра
-G.add_edges_from([('П1', 2), (2, 3), (3, 4), ('П2', 6), (6, 7), (7, 8), ('П3', 10),
-                 (10, 11), (11, 'ГРП'), ('ГРП', 13),
-                  (10, 14), (11, 15), (13, 16),
-                  (14, 15), (15, 16), (2, 6), (6, 10),
-                  (15, 'П4'), (16, 'П5'), (4, 8), (8, 13)])
-
-# Визуализация графа
-A = nx.nx_agraph.to_agraph(G)
-A.layout('dot')  # twopi неплохой, dot тоже
-A.draw('multigraph.png')
+edges = [(2, 1), (13, 16,), (6, 5), (2, 3), (4, 3), (8, 4),
+         (8, 7), (6, 7), (10, 6), (10, 9), (13, 8),
+         (12, 13), ('ГРП', 12), (11, 10), (10, 14),
+         (15, 17), (11, 15), (16, 18),
+         (15, 16), (15, 14), (6, 2), (12, 11)]
+G.add_edges_from(edges)
 
 
-# проверка связности графа
-def is_graph_connected():
-    is_connected = nx.is_connected(G)
-    if is_connected:
-        print("Граф связный")
-    else:
-        print("Граф несвязный")
+# 2.1 Транспонированная матрица инцидентности !
+def create_incidence_matrix(nodes, edges):
+    # Создаем матрицу инцидентности
+    incidence_matrix = np.zeros((len(nodes), len(edges)), dtype=int)
+    edge_indices = {edge: i for i, edge in enumerate(edges)}
+    node_indices = {node: i for i, node in enumerate(nodes)}
+
+    for edge in edges:
+        node1, node2 = edge
+        edge_index = edge_indices[edge]
+        node1_index = node_indices[node1]
+        node2_index = node_indices[node2]
+        incidence_matrix[node1_index, edge_index] = 1
+        incidence_matrix[node2_index, edge_index] = -1
+
+    incidence_matrix_tr = incidence_matrix.transpose()
+    # Подготовим данные для PrettyTable
+    table = PrettyTable()
+    table.field_names = ['Участки/Узлы'] + nodes
+    for i, row in enumerate(incidence_matrix_tr):
+        table.add_row([f"{edges[i]}"] + list(row))
+
+    # Выводим таблицу с использованием PrettyTable
+    # print(table)
+    return incidence_matrix_tr
 
 
-# Минимальное остовное дерево
-def min_span_tree():
-    mst = nx.minimum_spanning_tree(G)
-    B = nx.nx_agraph.to_agraph(mst)
-    B.layout('dot')
-    B.draw('min_span_tree.png')
+incidence_matrix_tr = create_incidence_matrix(nodes, edges)  # работает
+#print(incidence_matrix_tr)
+
+inner_diameteres = {(2, 1): 51, (13, 16,): 151, (6, 5): 51, (2, 3): 54,
+                    (4, 3): 100, (8, 4): 100, (8, 7): 151, (6, 7): 151,
+                    (10, 6): 207, (10, 9): 51, (13, 8): 207,
+                    (12, 13): 207, ('ГРП', 12): 618, (11, 10): 207,
+                    (10, 14): 70, (15, 17): 70, (11, 15): 151, (16, 18): 70,
+                    (15, 16): 151, (15, 14): 70, (6, 2): 100, (12, 11): 207}
+
+Q_edge = [18.6, 151.1, 41.3, 25.8, 77.5, 53, 177.1, 91.6, 174, 22.8,
+          107.5, 172, 0, 119.8, 86.2, 43, 227, 43, 189.7, 50.5, 88.8, 34.4]
 
 
-# Вроде более менее, но здесь тупиковая система получается
-def MVR():
-    start_node = 'ГРП'
-    end_nodes = [node for node in G.nodes() if isinstance(node, str)
-                 and node.startswith('П')]
-
-    all_paths = {}
-    for end_node in end_nodes:
-        paths = list(nx.all_simple_paths(G, start_node, end_node))
-        all_paths[end_node] = paths
-
-    # Выбираем самый короткий путь для каждой вершины "П"
-    selected_paths = {end_node: min(paths, key=len)
-                      for end_node, paths in all_paths.items()}
-
-    # Создаем новый граф на основе выбранных путей
-    new_G = nx.Graph()
-    for path in selected_paths.values():
-        new_G.add_edges_from(zip(path[:-1], path[1:]))
-    # Визуализация графа с помощью PyGraphviz
-    A = nx.nx_agraph.to_agraph(new_G)
-    A.layout('dot')
-    A.draw('graph_with_shortest_paths.png')
+# 2.2
+def calculate_velocity(diameter, Q):
+    area = (0.25 * math.pi * (diameter / 1000)
+            ** 2)  # переводим диаметр в метры
+    # переводим расход в м3/ч и вычисляем скорость в м/с
+    velocity = Q / (area * 3600)
+    return velocity
 
 
-#MVR()
-is_graph_connected()
+edge_velocitices_vector = []
+for i in range(len(Q_edge)):
+    diameter_key = tuple(inner_diameteres.keys())[i]
+    diameter = inner_diameteres[diameter_key]
+    Q = Q_edge[i]
+    velocity = calculate_velocity(diameter, Q)
+    edge_velocitices_vector.append(velocity)
+
+# print(edge_velocitices_vector) # работает
+
+
+# 2.3
+Reynolds_number_vector = []
+natural_gas_viscosity = 0.0000143
+diameter_values = list(inner_diameteres.values())  # список удобный!
+for i in range(len(Q_edge)):
+    Reynolds_number = edge_velocitices_vector[i] * \
+        diameter_values[i] / 1000 / natural_gas_viscosity
+    Reynolds_number_vector.append(Reynolds_number)
+# print(Reynolds_number_vector) # работает
+
+# 2.4 есть ещё несколько типов труб без коэффициентов, пока не добавлял
+roughness_factor_dict = {'Сталь': 0.1000,
+                         'OK': 0.1500, 'REHAU': 0.0070, 'МП': 0.0004}
+
+# 2.5
+friction_factor_vector = []
+
+
+def calculate_friction_factor(Reynolds_number, inner_diameter, roughness_factor):
+    Reynolds_roughness_diameter_ratio = Reynolds_number * \
+        roughness_factor / inner_diameter
+    if Reynolds_number == 0:
+        friction_factor = 1 / \
+            ((2 * math.log10(3.7/(roughness_factor/inner_diameter)))**2)
+        friction_factor_vector.append(friction_factor)
+    elif Reynolds_number < 2300:
+        friction_factor = 64 / Reynolds_number
+        friction_factor_vector.append(friction_factor)
+    elif Reynolds_roughness_diameter_ratio < 23 and Reynolds_number < 125000:
+        friction_factor = 0.3164 / (Reynolds_number ** 0.25)
+        friction_factor_vector.append(friction_factor)
+    elif Reynolds_roughness_diameter_ratio < 23 and Reynolds_number > 125000:
+        friction_factor = 0.0032 + (0.221 / (Reynolds_number ** 0.237))
+        friction_factor_vector.append(friction_factor)
+    elif Reynolds_roughness_diameter_ratio >= 23 and Reynolds_roughness_diameter_ratio < 560:
+        friction_factor = 0.11 * \
+            (((roughness_factor/inner_diameter) + (68/Reynolds_number)) ** 0.25)
+        friction_factor_vector.append(friction_factor)
+    elif Reynolds_roughness_diameter_ratio >= 560:
+        friction_factor = 1 / \
+            ((2 * math.log10(3.7/(roughness_factor/inner_diameter)))**2)
+        friction_factor_vector.append(friction_factor)
+
+
+for i in range(len(Q_edge)):
+    calculate_friction_factor(
+        Reynolds_number_vector[i], diameter_values[i], roughness_factor_dict.get('Сталь'))
+# print(friction_factor_vector) # работает!
+
+
+gas_density = 0.73
+pipe_length_vector = [100, 450, 100, 100, 300, 205, 290, 150, 300,
+                      100, 305, 250, 10, 200, 350, 150, 390, 150, 305, 205, 200, 50]
+hydraulic_friction_factor_vector = []
+
+
+def calculate_hydraulic_friction_factor(friction_factor, pipe_length, pipe_diameter):
+    hydraulic_friction_factor = (gas_density / 2) * friction_factor * pipe_length / (
+        pipe_diameter/1000) * 16/((3600*math.pi*((pipe_diameter/1000)**2))**2)
+    hydraulic_friction_factor_vector.append(hydraulic_friction_factor)
+
+
+for i in range(len(Q_edge)):
+    calculate_hydraulic_friction_factor(
+        friction_factor_vector[i], pipe_length_vector[i], diameter_values[i])
+# print(hydraulic_friction_factor_vector) # работает !
+
+
+R_factor_vector = []
+
+
+def calculate_R_factor(hydraulic_friction_factor):
+    R_factor = 1 / ((hydraulic_friction_factor) ** 0.5)
+    R_factor_vector.append(R_factor)
+
+
+for i in range(len(Q_edge)):
+    calculate_R_factor(hydraulic_friction_factor_vector[i])
+# print(R_factor_vector) # работает !
+
+
+def create_diagonal_matrix(matrix):
+    matrix_size = len(matrix)
+    diagonal_matrix = np.zeros((matrix_size, matrix_size))
+    np.fill_diagonal(diagonal_matrix, matrix)
+    return diagonal_matrix
+
+
+# 3.1
+R_factor_matrix = create_diagonal_matrix(R_factor_vector)
+# print(R_factor_matrix)  # работает !
+
+
+def print_matrix(matrix):
+    table = PrettyTable()
+    table.field_names = [index for index in range(1, len(matrix) + 1)]
+    for row in matrix:
+        formatted_row = ["{:.2f}".format(element) for element in row]
+        table.add_row(formatted_row)
+    print(table)
+
+
+# print_matrix(R_factor_matrix)
+
+# 3.2
+def calculate_M0_matrix(transposed_incidence_matrix, R_factor_matrix):
+    incidence_matrix = transposed_incidence_matrix.transpose()
+    M0_matrix = np.matmul(
+        np.matmul(incidence_matrix, R_factor_matrix), transposed_incidence_matrix)
+    return M0_matrix
+
+
+M0_matrix = calculate_M0_matrix(
+    incidence_matrix_tr, R_factor_matrix)  # работает!
+#print(M0_matrix)
+#print_matrix(M0_matrix)
+
+
+# вектор давлений
+pressure_vector = [3000 if node == "ГРП" else 0 for node in nodes]
+print(pressure_vector)
+
+#количество граничных узлов
+edge_nodes_count = sum(1 for node in nodes if node == "ГРП")
+inner_nodes_count = len(nodes) - edge_nodes_count
+# Cмещение матрицы
+def shift_array(matrix, row_offset, col_offset, height, width):
+    arr = np.array(matrix)
+    rows, cols = arr.shape
+    # Вычисляем индексы начала и конца вырезаемой области
+    start_row = max(0, row_offset)
+    end_row = min(rows, row_offset + height)
+    start_col = max(0, col_offset)
+    end_col = min(cols, col_offset + width)
+    # Вырезаем нужную область из исходного массива
+    shifted_arr = arr[start_row:end_row, start_col:end_col]
+    return shifted_arr
+
+#print(shift_array(M0_matrix, 0, 17, 17, 2))
+
+def m0_vector_mult_P_vector(m0_matrix, pressure_vector, edge_nodes_count, inner_nodes_count):
+    m0_vector = shift_array(m0_matrix, 0, inner_nodes_count, inner_nodes_count, edge_nodes_count)
+    P_vector = [value for value in pressure_vector if value != 0]
+    result = -np.dot(m0_vector, P_vector)
+    return result
+
+print(m0_vector_mult_P_vector(M0_matrix, pressure_vector, edge_nodes_count, inner_nodes_count)) # работает !!!
+
+# 3.3
+def calculate_1_S_Xk_matrix():
+    pass

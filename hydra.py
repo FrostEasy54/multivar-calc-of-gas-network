@@ -5,7 +5,16 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 import networkx as nx
 import pygraphviz as pgv
+import math
 from objects import objects_name_list, objects_dict
+from pipes import pipe_type_dict, roughness_factor_dict
+
+natural_gas_viscosity = 0.0000143
+gas_velocity_vector = []
+pipe_diameter_vector = []
+Reynolds_number_vector = []
+roughness_factor_vector = []
+Darsi_friction_factor_vector = []
 
 
 class ImageDialog(QDialog):
@@ -28,6 +37,11 @@ class HydraTable():
         self.HydraNumberSpinBox()
         self.HydraBeginningComboBox()
         self.HydraEndComboBox()
+        self.HydraLengthSpinBox()
+        self.HydraPathConsumptionDoubleSpinBox()
+        self.HydraPipeTypeComboBox()
+        self.HydraPipeDiameter()
+        self.HydraGasVelocity()
 
     def RemoveHydraRow(self):
         if self.HydraTableWidget.rowCount() == 1:
@@ -64,6 +78,129 @@ class HydraTable():
         cb = QComboBox()
         cb.addItems(objects_name_list)
         self.HydraTableWidget.setCellWidget(row, col, cb)
+
+    def HydraLengthSpinBox(self):
+        col = 3
+        row = self.HydraTableWidget.rowCount() - 1
+        sb = QSpinBox()
+        sb.setMaximum(1000)
+        sb.setMinimum(0)
+        self.HydraTableWidget.setCellWidget(row, col, sb)
+
+    def HydraPathConsumptionDoubleSpinBox(self):
+        col = 4
+        row = self.HydraTableWidget.rowCount() - 1
+        sb = QDoubleSpinBox()
+        sb.setMaximum(1000)
+        sb.setMinimum(0)
+        self.HydraTableWidget.setCellWidget(row, col, sb)
+        self.HydraTableWidget.cellWidget(
+            row, col).valueChanged.connect(self.HydraGasVelocity)
+
+    def HydraPipeTypeComboBox(self):
+        col = 5
+        row = self.HydraTableWidget.rowCount() - 1
+        cb = QComboBox()
+        cb.addItems(pipe_type_dict.keys())
+        self.HydraTableWidget.setCellWidget(row, col, cb)
+        self.HydraTableWidget.cellWidget(
+            row, col).currentTextChanged.connect(self.HydraPipeDiameter)
+        self.HydraTableWidget.cellWidget(
+            row, col).currentTextChanged.connect(self.HydraGasVelocity)
+
+    def HydraPipeDiameter(self):
+        col = 6
+        row = self.HydraTableWidget.rowCount() - 1
+        combo_box_item = self.HydraTableWidget.cellWidget(row, 5)
+        selected_pipe = combo_box_item.currentText()
+        diameter = pipe_type_dict.get(selected_pipe, "Нет данных")
+        diameter_item = QTableWidgetItem(str(diameter))
+        self.HydraTableWidget.setItem(row, col, diameter_item)
+
+    def HydraGasVelocity(self):
+        col = 7
+        row = self.HydraTableWidget.rowCount() - 1
+        diameter = float(self.HydraTableWidget.item(row, 6).text())
+        Q = float(self.HydraTableWidget.cellWidget(row, 4).value())
+        area = (0.25 * math.pi * (diameter / 1000) ** 2)
+        velocity = Q / (area * 3600)
+        velocity_item = QTableWidgetItem(str(velocity))
+        self.HydraTableWidget.setItem(row, col, velocity_item)
+
+    def CreateVelocityArray(self):
+        gas_velocity_vector.clear()
+        for row in range(self.HydraTableWidget.rowCount()):
+            velocity = float(self.HydraTableWidget.item(row, 7).text())
+            gas_velocity_vector.append(velocity)
+        print(gas_velocity_vector)
+
+    def CreateDiameterArray(self):
+        pipe_diameter_vector.clear()
+        for row in range(self.HydraTableWidget.rowCount()):
+            diameter = float(self.HydraTableWidget.item(row, 6).text())
+            pipe_diameter_vector.append(diameter)
+        print(pipe_diameter_vector)
+
+    def CalculateReynoldsNumber(self):
+        Reynolds_number_vector.clear()
+        for i in range(len(gas_velocity_vector)):
+            Reynolds_number = gas_velocity_vector[i] * \
+                pipe_diameter_vector[i] / 1000 / natural_gas_viscosity
+            Reynolds_number_vector.append(Reynolds_number)
+        print(Reynolds_number_vector)
+
+    def CreatePipeRoughnessFactor(self):
+        roughness_factor_vector.clear()
+        for i in range(len(gas_velocity_vector)):
+            material_name = self.HydraTableWidget.cellWidget(
+                i, 5).currentText().split()[0]
+            if material_name in roughness_factor_dict:
+                roughness_factor_vector.append(
+                    roughness_factor_dict[material_name])
+            else:
+                roughness_factor_vector.append(0)
+        print("---------------------")
+        print(roughness_factor_vector)
+
+    def CalculateDarsiFrictionFactor(self):
+        Darsi_friction_factor_vector.clear()
+        for i in range(len(gas_velocity_vector)):
+            roughness_factor = roughness_factor_dict.get('Сталь')
+            Reynolds_roughness_diameter_ratio = Reynolds_number_vector[i] * \
+                roughness_factor / pipe_diameter_vector[i]
+            if Reynolds_number_vector[i] == 0:
+                friction_factor = 1 / \
+                    ((2 * math.log10(3.7 /
+                     (roughness_factor/pipe_diameter_vector[i])))**2)
+                Darsi_friction_factor_vector.append(friction_factor)
+            elif Reynolds_number_vector[i] < 2300:
+                friction_factor = 64 / Reynolds_number_vector[i]
+                Darsi_friction_factor_vector.append(friction_factor)
+            elif Reynolds_roughness_diameter_ratio < 23 and Reynolds_number_vector[i] < 125000:
+                friction_factor = 0.3164 / (Reynolds_number_vector[i] ** 0.25)
+                Darsi_friction_factor_vector.append(friction_factor)
+            elif Reynolds_roughness_diameter_ratio < 23 and Reynolds_number_vector[i] > 125000:
+                friction_factor = 0.0032 + \
+                    (0.221 / (Reynolds_number_vector[i] ** 0.237))
+                Darsi_friction_factor_vector.append(friction_factor)
+            elif Reynolds_roughness_diameter_ratio >= 23 and Reynolds_roughness_diameter_ratio < 560:
+                friction_factor = 0.11 * \
+                    (((roughness_factor /
+                     pipe_diameter_vector[i]) + (68/Reynolds_number_vector[i])) ** 0.25)
+                Darsi_friction_factor_vector.append(friction_factor)
+            elif Reynolds_roughness_diameter_ratio >= 560:
+                friction_factor = 1 / \
+                    ((2 * math.log10(3.7 /
+                     (roughness_factor/pipe_diameter_vector[i])))**2)
+                Darsi_friction_factor_vector.append(friction_factor)
+        print(Darsi_friction_factor_vector)
+
+    def CalculateAll(self):
+        self.CreateVelocityArray()
+        self.CreateDiameterArray()
+        self.CalculateReynoldsNumber()
+        self.CreatePipeRoughnessFactor()
+        self.CalculateDarsiFrictionFactor()
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
