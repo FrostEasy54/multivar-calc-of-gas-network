@@ -1,4 +1,4 @@
-from PyQt6.QtWidgets import QTableWidgetItem, QComboBox, QDoubleSpinBox
+from PyQt6.QtWidgets import QTableWidgetItem, QComboBox, QDoubleSpinBox, QFileDialog
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QDialog, QVBoxLayout, QLabel
 from PyQt6 import QtCore
 from PyQt6.QtCore import Qt
@@ -7,9 +7,10 @@ from PyQt6.QtGui import QPixmap
 from prettytable import PrettyTable
 import numpy as np
 import networkx as nx
-import pygraphviz as pgv
 
 import math
+import csv
+
 from objects import objects_name_list, objects_dict
 from pipes import pipe_type_dict, roughness_factor_dict
 
@@ -24,8 +25,6 @@ roughness_factor_vector = []
 Darsi_friction_factor_vector = []
 hydraulic_friction_factor = []
 R_factor_vector = []
-incidence_matrix_tr = 0
-R_matrix = 0
 
 
 class ImageDialog(QDialog):
@@ -249,6 +248,7 @@ class HydraTable():
         print(R_factor_vector)
 
     def CreateIncidenceMatrix(self):
+        global incidence_matrix_tr
         incidence_matrix = np.zeros(
             (len(objects_name_list), len(edges_vector)), dtype=int)
         edge_indices = {edge: i for i, edge in enumerate(edges_vector)}
@@ -271,6 +271,7 @@ class HydraTable():
         print(table)
 
     def CreateRFactorMatrix(self):
+        global R_matrix
         matrix_size = len(R_factor_vector)
         diagonal_R_matrix = np.zeros((matrix_size, matrix_size))
         np.fill_diagonal(diagonal_R_matrix, R_factor_vector)
@@ -278,15 +279,17 @@ class HydraTable():
         print(R_matrix)
 
     def CalculateM0Matrix(self):
-        if incidence_matrix_tr == 0:
+        global M0_matrix
+        if len(incidence_matrix_tr) == 0 or len(R_matrix) == 0:
             QMessageBox().warning(
                 None, "Матрица не существует",
-                "Матрицы инцидентности не сущесвует.")
+                "Матрицы инцидентности или матрицы вектора R не сущесвует.")
             return
         incidence_matrix = incidence_matrix_tr.transpose()
         M0_matrix = np.matmul(
             np.matmul(incidence_matrix, R_matrix), incidence_matrix_tr)
-        return M0_matrix
+        print("M0 matrix")
+        print(M0_matrix)
 
     def CalculateAll(self):
         self.CreateEdgesArray()
@@ -302,7 +305,7 @@ class HydraTable():
 
         self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
         self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
-        self.CalculateM0Matrix()  # нужно чтоб существовала матрица инцидентности и матрица R
+        self.CalculateM0Matrix()  # нужна матрица инцидентности и матрица R
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
@@ -405,3 +408,89 @@ class HydraTable():
                     for neighbor in graph.neighbors(current_object):
                         stack.append(neighbor)
         return False
+
+    def ClearHydraTable(self):
+        self.HydraTableWidget.setRowCount(0)
+        self.AddHydraRow()
+
+    def HydraSaveToCSV(self):
+        try:
+            file_dialog = QFileDialog()
+            path, _ = file_dialog.getSaveFileName(
+                None, "Сохранить файл CSV", "",
+                "CSV Files (*.csv);;All Files (*)")
+            if path:
+                with open(path, 'w', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(
+                        ['№ участка', 'Начало участка', 'Конец участка',
+                         'L, м', 'Q пут, н.м3/ч', 'Тип трубы',
+                         'Диаметр трубы', 'Скорость газа V, м/с'])
+                    for row in range(self.HydraTableWidget.rowCount()):
+                        hydra_number = self.HydraTableWidget.cellWidget(
+                            row, 0).value()
+                        beginning_object = self.HydraTableWidget.cellWidget(
+                            row, 1).currentText()
+                        end_object = self.HydraTableWidget.cellWidget(
+                            row, 2).currentText()
+                        length = self.HydraTableWidget.cellWidget(
+                            row, 3).value()
+                        Q = self.HydraTableWidget.cellWidget(row, 4).value()
+                        pipe_type = self.HydraTableWidget.cellWidget(
+                            row, 5).currentText()
+                        diameter = self.HydraTableWidget.item(row, 6).text()
+                        gas_speed = self.HydraTableWidget.item(row, 7).text()
+                        writer.writerow(
+                            [hydra_number, beginning_object, end_object,
+                             length, Q, pipe_type, diameter, gas_speed])
+                QMessageBox().information(None, "Сохранено",
+                                          f"Данные успешно сохранены в файл CSV: {path}")  # noqa E501
+        except Exception as e:
+            QMessageBox().critical(None, "Ошибка",
+                                   f"Произошла ошибка при сохранении: {e}")
+
+    def HydraLoadFromCSV(self):
+        try:
+            file_dialog = QFileDialog()
+            path, _ = file_dialog.getOpenFileName(
+                None, "Сохранить файл CSV", "", "CSV Files (*.csv)")
+            if path:
+                with open(path, 'r', encoding='utf-8') as csvfile:
+                    reader = csv.reader(csvfile)
+                    self.ClearHydraTable()
+                    for row, row_data in enumerate(reader):
+                        if row > 0:
+                            self.AddHydraRow()
+                            for col, data in enumerate(row_data):
+                                if col == 0:
+                                    self.HydraTableWidget.cellWidget(
+                                        row - 1, col).setValue(int(data))
+                                elif col == 1:
+                                    self.HydraTableWidget.cellWidget(
+                                        row - 1, col).setCurrentText(str(data))
+                                elif col == 2:
+                                    self.HydraTableWidget.cellWidget(
+                                        row - 1, col).setCurrentText(str(data))
+                                elif col == 3:
+                                    self.HydraTableWidget.cellWidget(
+                                        row - 1, col).setValue(int(data))
+                                elif col == 4:
+                                    self.HydraTableWidget.cellWidget(
+                                        row - 1, col).setValue(float(data))
+                                elif col == 5:
+                                    self.HydraTableWidget.cellWidget(
+                                        row - 1, col).setCurrentText(str(data))
+                                elif col == 6:
+                                    item = QTableWidgetItem(data)
+                                    self.HydraTableWidget.setItem(
+                                        row - 1, col, item)
+                                elif col == 7:
+                                    item = QTableWidgetItem(data)
+                                    self.HydraTableWidget.setItem(
+                                        row - 1, col, item)
+            self.RemoveHydraRow()
+            QMessageBox().information(None, "Импорт завершен",
+                                      "Данные успешно импортированы.")
+        except Exception as e:
+            QMessageBox().critical(None, "Ошибка",
+                                   f"Произошла ошибка при загрузке: {e}")

@@ -28,8 +28,8 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.ExportObjectsOnHydraPushButton.clicked.connect(
             self.ChangeHydraComboBoxContents)
 
-        self.ActionSaveFile.triggered.connect(self.ObjectsSaveToCSV)
-        self.ActionLoadFile.triggered.connect(self.ObjectsLoadFromCSV)
+        self.ActionSaveObjects.triggered.connect(self.ObjectsSaveToCSV)
+        self.ActionLoadObjects.triggered.connect(self.ObjectsLoadFromCSV)
         # заполнение первой строки
         self.ObjectsTypeComboBox()
         self.ObjectsNumberSpinBox()
@@ -46,6 +46,9 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.ShowTopologyPushButton.clicked.connect(self.ShowTopology)
         self.BuildTopologyPushButton.clicked.connect(self.BuildTopology)
         self.CalculatePushButton.clicked.connect(self.CalculateAll)
+
+        self.ActionSaveHydra.triggered.connect(self.HydraSaveToCSV)
+        self.ActionLoadHydra.triggered.connect(self.HydraLoadFromCSV)
         # заполнение первой строки
         self.HydraBeginningComboBox()
         self.HydraEndComboBox()

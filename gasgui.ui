@@ -405,13 +405,15 @@
      <property name="title">
       <string>Сохранить</string>
      </property>
-     <addaction name="ActionSaveFile"/>
+     <addaction name="ActionSaveObjects"/>
+     <addaction name="ActionSaveHydra"/>
     </widget>
     <widget class="QMenu" name="DownloadMenu">
      <property name="title">
       <string>Загрузить</string>
      </property>
-     <addaction name="ActionLoadFile"/>
+     <addaction name="ActionLoadObjects"/>
+     <addaction name="ActionLoadHydra"/>
     </widget>
     <addaction name="DownloadMenu"/>
     <addaction name="SaveMenu"/>
@@ -480,12 +482,12 @@
     <string>Очистить Всё</string>
    </property>
   </action>
-  <action name="ActionSaveFile">
+  <action name="ActionSaveObjects">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Сохранить файл</string>
+    <string>Сохранить Объекты</string>
    </property>
   </action>
   <action name="ActionSavePeople">
@@ -520,9 +522,9 @@
     <string>Сохранить все Листы в единый файл</string>
    </property>
   </action>
-  <action name="ActionLoadFile">
+  <action name="ActionLoadObjects">
    <property name="text">
-    <string>Загрузить файл</string>
+    <string>Загрузить Объекты</string>
    </property>
   </action>
   <action name="ActionImportPeople">
@@ -566,6 +568,16 @@
   <action name="actionNormativeDocs">
    <property name="text">
     <string>Нормативные документы</string>
+   </property>
+  </action>
+  <action name="ActionSaveHydra">
+   <property name="text">
+    <string>Сохранить Гидравлика</string>
+   </property>
+  </action>
+  <action name="ActionLoadHydra">
+   <property name="text">
+    <string>Загрузить Гидравлика</string>
    </property>
   </action>
  </widget>

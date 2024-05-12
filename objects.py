@@ -122,6 +122,7 @@ class ObjectsTable():
                                     self.ObjectsTableWidget.setItem(
                                         row - 1, col, item)
             self.RemoveObjectsRow()
+            self.ChangeHydraComboBoxContents()
             QMessageBox().information(None, "Импорт завершен",
                                       "Данные успешно импортированы.")
         except Exception as e:
