@@ -27,6 +27,9 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.RemoveRowObjectsPushButton.clicked.connect(self.RemoveObjectsRow)
         self.ExportObjectsOnHydraPushButton.clicked.connect(
             self.ChangeHydraComboBoxContents)
+
+        self.ActionSaveFile.triggered.connect(self.ObjectsSaveToCSV)
+        self.ActionLoadFile.triggered.connect(self.ObjectsLoadFromCSV)
         # заполнение первой строки
         self.ObjectsTypeComboBox()
         self.ObjectsNumberSpinBox()

@@ -3,18 +3,29 @@ from PyQt6.QtWidgets import QSpinBox, QMessageBox, QDialog, QVBoxLayout, QLabel
 from PyQt6 import QtCore
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
+
+from prettytable import PrettyTable
+import numpy as np
 import networkx as nx
 import pygraphviz as pgv
+
 import math
 from objects import objects_name_list, objects_dict
 from pipes import pipe_type_dict, roughness_factor_dict
 
-natural_gas_viscosity = 0.0000143
+NATURAL_GAS_VISCOSITY = 0.0000143
+GAS_DENSITY = 0.73
+edges_vector = []
 gas_velocity_vector = []
 pipe_diameter_vector = []
+pipe_length_vector = []
 Reynolds_number_vector = []
 roughness_factor_vector = []
 Darsi_friction_factor_vector = []
+hydraulic_friction_factor = []
+R_factor_vector = []
+incidence_matrix_tr = 0
+R_matrix = 0
 
 
 class ImageDialog(QDialog):
@@ -127,6 +138,18 @@ class HydraTable():
         velocity_item = QTableWidgetItem(str(velocity))
         self.HydraTableWidget.setItem(row, col, velocity_item)
 
+    def CreateEdgesArray(self):
+        edges_vector.clear()
+        for row in range(self.HydraTableWidget.rowCount()):
+            beginning_edge_text = str(
+                self.HydraTableWidget.cellWidget(row, 1).currentText())
+            end_edge_text = str(
+                self.HydraTableWidget.cellWidget(row, 2).currentText())
+            edge = tuple((beginning_edge_text, end_edge_text))
+            edges_vector.append(edge)
+        print('Вектор ребер')
+        print(edges_vector)
+
     def CreateVelocityArray(self):
         gas_velocity_vector.clear()
         for row in range(self.HydraTableWidget.rowCount()):
@@ -141,11 +164,18 @@ class HydraTable():
             pipe_diameter_vector.append(diameter)
         print(pipe_diameter_vector)
 
+    def CreateLengthArray(self):
+        pipe_length_vector.clear()
+        for row in range(self.HydraTableWidget.rowCount()):
+            length = int(self.HydraTableWidget.cellWidget(row, 3).value())
+            pipe_length_vector.append(length)
+        print(pipe_length_vector)
+
     def CalculateReynoldsNumber(self):
         Reynolds_number_vector.clear()
         for i in range(len(gas_velocity_vector)):
             Reynolds_number = gas_velocity_vector[i] * \
-                pipe_diameter_vector[i] / 1000 / natural_gas_viscosity
+                pipe_diameter_vector[i] / 1000 / NATURAL_GAS_VISCOSITY
             Reynolds_number_vector.append(Reynolds_number)
         print(Reynolds_number_vector)
 
@@ -176,17 +206,21 @@ class HydraTable():
             elif Reynolds_number_vector[i] < 2300:
                 friction_factor = 64 / Reynolds_number_vector[i]
                 Darsi_friction_factor_vector.append(friction_factor)
-            elif Reynolds_roughness_diameter_ratio < 23 and Reynolds_number_vector[i] < 125000:
+            elif Reynolds_roughness_diameter_ratio < 23 and \
+                    Reynolds_number_vector[i] < 125000:
                 friction_factor = 0.3164 / (Reynolds_number_vector[i] ** 0.25)
                 Darsi_friction_factor_vector.append(friction_factor)
-            elif Reynolds_roughness_diameter_ratio < 23 and Reynolds_number_vector[i] > 125000:
+            elif Reynolds_roughness_diameter_ratio < 23 and \
+                    Reynolds_number_vector[i] > 125000:
                 friction_factor = 0.0032 + \
                     (0.221 / (Reynolds_number_vector[i] ** 0.237))
                 Darsi_friction_factor_vector.append(friction_factor)
-            elif Reynolds_roughness_diameter_ratio >= 23 and Reynolds_roughness_diameter_ratio < 560:
+            elif Reynolds_roughness_diameter_ratio >= 23 and\
+                    Reynolds_roughness_diameter_ratio < 560:
                 friction_factor = 0.11 * \
                     (((roughness_factor /
-                     pipe_diameter_vector[i]) + (68/Reynolds_number_vector[i])) ** 0.25)
+                     pipe_diameter_vector[i]) + (
+                        68/Reynolds_number_vector[i])) ** 0.25)
                 Darsi_friction_factor_vector.append(friction_factor)
             elif Reynolds_roughness_diameter_ratio >= 560:
                 friction_factor = 1 / \
@@ -195,12 +229,80 @@ class HydraTable():
                 Darsi_friction_factor_vector.append(friction_factor)
         print(Darsi_friction_factor_vector)
 
+    def CalculateHydraulicFrictionFactor(self):
+        hydraulic_friction_factor.clear()
+        for i in range(len(gas_velocity_vector)):
+            friction_factor = (GAS_DENSITY / 2) * \
+                Darsi_friction_factor_vector[i] * pipe_length_vector[i] / (
+                    pipe_diameter_vector[i]/1000) * 16/(
+                        (3600*math.pi*((pipe_diameter_vector[i]/1000)**2))**2)
+            hydraulic_friction_factor.append(friction_factor)
+        print("vector S\n")
+        print(hydraulic_friction_factor)
+
+    def CalculateRFactor(self):
+        R_factor_vector.clear()
+        for i in range(len(gas_velocity_vector)):
+            R_factor = 1 / ((hydraulic_friction_factor[i]) ** 0.5)
+            R_factor_vector.append(R_factor)
+        print("Vector R\n")
+        print(R_factor_vector)
+
+    def CreateIncidenceMatrix(self):
+        incidence_matrix = np.zeros(
+            (len(objects_name_list), len(edges_vector)), dtype=int)
+        edge_indices = {edge: i for i, edge in enumerate(edges_vector)}
+        node_indices = {node: i for i, node in enumerate(objects_name_list)}
+        for edge in edges_vector:
+            node1, node2 = edge
+            edge_index = edge_indices[edge]
+            node1_index = node_indices[node1]
+            node2_index = node_indices[node2]
+            incidence_matrix[node1_index, edge_index] = 1
+            incidence_matrix[node2_index, edge_index] = -1
+        incidence_matrix_tr = incidence_matrix.transpose()
+
+        table = PrettyTable()
+        table.field_names = ['Участки/Узлы'] + objects_name_list
+        for i, row in enumerate(incidence_matrix_tr):
+            table.add_row([f"{edges_vector[i]}"] + list(row))
+
+        # Выводим таблицу с использованием PrettyTable
+        print(table)
+
+    def CreateRFactorMatrix(self):
+        matrix_size = len(R_factor_vector)
+        diagonal_R_matrix = np.zeros((matrix_size, matrix_size))
+        np.fill_diagonal(diagonal_R_matrix, R_factor_vector)
+        R_matrix = diagonal_R_matrix
+        print(R_matrix)
+
+    def CalculateM0Matrix(self):
+        if incidence_matrix_tr == 0:
+            QMessageBox().warning(
+                None, "Матрица не существует",
+                "Матрицы инцидентности не сущесвует.")
+            return
+        incidence_matrix = incidence_matrix_tr.transpose()
+        M0_matrix = np.matmul(
+            np.matmul(incidence_matrix, R_matrix), incidence_matrix_tr)
+        return M0_matrix
+
     def CalculateAll(self):
+        self.CreateEdgesArray()
+
         self.CreateVelocityArray()
         self.CreateDiameterArray()
+        self.CreateLengthArray()
         self.CalculateReynoldsNumber()
         self.CreatePipeRoughnessFactor()
         self.CalculateDarsiFrictionFactor()
+        self.CalculateHydraulicFrictionFactor()
+        self.CalculateRFactor()
+
+        self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
+        self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
+        self.CalculateM0Matrix()  # нужно чтоб существовала матрица инцидентности и матрица R
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):

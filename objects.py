@@ -1,6 +1,7 @@
-from PyQt6.QtWidgets import QTableWidgetItem, QComboBox, QDoubleSpinBox
-from PyQt6.QtWidgets import QSpinBox, QMessageBox
-from PyQt6 import QtCore
+from PyQt6.QtWidgets import QTableWidgetItem, QComboBox
+from PyQt6.QtWidgets import QSpinBox, QMessageBox, QFileDialog
+
+import csv
 
 objects_name_list = []
 objects_dict = {}
@@ -8,12 +9,12 @@ objects_dict = {}
 
 class ObjectsTable():
     def AddObjectsRow(self):
-        object_name_item = self.ObjectsTableWidget.item(
+        ''' object_name_item = self.ObjectsTableWidget.item(
             self.ObjectsTableWidget.rowCount() - 1, 2)
         if object_name_item is None or object_name_item.text().strip() == "":
             QMessageBox().warning(
                 None, "Пустое поле", "Пожалуйста, введите условное обозначение объекта.")  # noqa E501
-            return
+            return'''
         self.ObjectsTableWidget.insertRow(self.ObjectsTableWidget.rowCount())
         self.ObjectsTypeComboBox()
         self.ObjectsNumberSpinBox()
@@ -64,3 +65,65 @@ class ObjectsTable():
                     objects_name_list.append(object_name)
                     objects_dict[object_name] = object_type
         print(objects_dict)
+
+    def ClearObjectsTable(self):
+        self.ObjectsTableWidget.setRowCount(0)
+        self.AddObjectsRow()
+        objects_name_list.clear()
+        objects_dict.clear()
+
+    def ObjectsSaveToCSV(self):
+        try:
+            file_dialog = QFileDialog()
+            path, _ = file_dialog.getSaveFileName(
+                None, "Сохранить файл CSV", "",
+                "CSV Files (*.csv);;All Files (*)")
+            if path:
+                with open(path, 'w', newline='', encoding='utf-8') as csvfile:
+                    writer = csv.writer(csvfile)
+                    writer.writerow(
+                        ['№', 'Тип объекта', 'Условное обозначение'])
+                    for row in range(self.ObjectsTableWidget.rowCount()):
+                        object_number = self.ObjectsTableWidget.cellWidget(
+                            row, 0).value()
+                        object_type = self.ObjectsTableWidget.cellWidget(
+                            row, 1).currentText()
+                        object_name = self.ObjectsTableWidget.item(
+                            row, 2).text()
+                        writer.writerow(
+                            [object_number, object_type, object_name])
+                QMessageBox().information(None, "Сохранено",
+                                          f"Данные успешно сохранены в файл CSV: {path}")  # noqa E501
+        except Exception as e:
+            QMessageBox().critical(None, "Ошибка",
+                                   f"Произошла ошибка при сохранении: {e}")
+
+    def ObjectsLoadFromCSV(self):
+        try:
+            file_dialog = QFileDialog()
+            path, _ = file_dialog.getOpenFileName(
+                None, "Сохранить файл CSV", "", "CSV Files (*.csv)")
+            if path:
+                with open(path, 'r', encoding='utf-8') as csvfile:
+                    reader = csv.reader(csvfile)
+                    self.ClearObjectsTable()
+                    for row, row_data in enumerate(reader):
+                        if row > 0:
+                            self.AddObjectsRow()
+                            for col, data in enumerate(row_data):
+                                if col == 0:
+                                    self.ObjectsTableWidget.cellWidget(
+                                        row - 1, col).setValue(int(data))
+                                elif col == 1:
+                                    self.ObjectsTableWidget.cellWidget(
+                                        row - 1, col).setCurrentText(str(data))
+                                else:
+                                    item = QTableWidgetItem(data)
+                                    self.ObjectsTableWidget.setItem(
+                                        row - 1, col, item)
+            self.RemoveObjectsRow()
+            QMessageBox().information(None, "Импорт завершен",
+                                      "Данные успешно импортированы.")
+        except Exception as e:
+            QMessageBox().critical(None, "Ошибка",
+                                   f"Произошла ошибка при загрузке: {e}")
