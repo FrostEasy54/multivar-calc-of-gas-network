@@ -155,7 +155,7 @@ cython_debug/
 
 *.png
 graphs_pic/
-
+*.csv
 .vscode/
 todo
 

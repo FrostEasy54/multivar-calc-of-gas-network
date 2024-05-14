@@ -1,7 +1,6 @@
 import os
 import sys
 from PyQt6.QtWidgets import QMainWindow, QHeaderView, QApplication
-from PyQt6.QtWidgets import QFileDialog, QMessageBox
 from PyQt6 import uic
 from objects import ObjectsTable
 from hydra import HydraTable

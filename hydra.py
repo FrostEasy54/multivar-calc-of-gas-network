@@ -17,6 +17,8 @@ from pipes import pipe_type_dict, roughness_factor_dict
 NATURAL_GAS_VISCOSITY = 0.0000143
 GAS_DENSITY = 0.73
 edges_vector = []
+path_consumption_vector = []
+node_consumption_vector = []
 gas_velocity_vector = []
 pipe_diameter_vector = []
 pipe_length_vector = []
@@ -25,6 +27,7 @@ roughness_factor_vector = []
 Darsi_friction_factor_vector = []
 hydraulic_friction_factor = []
 R_factor_vector = []
+m0_mult_press_vector_plus_Q = []
 
 
 class ImageDialog(QDialog):
@@ -136,6 +139,12 @@ class HydraTable():
         velocity = Q / (area * 3600)
         velocity_item = QTableWidgetItem(str(velocity))
         self.HydraTableWidget.setItem(row, col, velocity_item)
+
+    def CreatePathConsumptionArray(self):
+        path_consumption_vector.clear()
+        for row in range(self.HydraTableWidget.rowCount()):
+            path_consumption_vector.append(
+                float(self.HydraTableWidget.cellWidget(row, 4).value()))
 
     def CreateEdgesArray(self):
         edges_vector.clear()
@@ -291,9 +300,92 @@ class HydraTable():
         print("M0 matrix")
         print(M0_matrix)
 
+    def CreatePressureArray(self):
+        global pressure_vector
+        pressure_vector = [3000 if obj_type ==
+                           "ГРП" else 0 for obj_type in objects_dict.values()]
+
+    def CreateNodesCount(self):
+        global edge_nodes_count
+        global inner_nodes_count
+        edge_nodes_count = sum(
+            1 for obj_type in objects_dict.values() if obj_type == "ГРП")
+        inner_nodes_count = len(objects_name_list) - edge_nodes_count
+
+    def ShiftArray(self, matrix, row_offset, col_offset, height, width):
+        arr = np.array(matrix)
+        rows, cols = arr.shape
+        # Вычисляем индексы начала и конца вырезаемой области
+        start_row = max(0, row_offset)
+        end_row = min(rows, row_offset + height)
+        start_col = max(0, col_offset)
+        end_col = min(cols, col_offset + width)
+        # Вырезаем нужную область из исходного массива
+        shifted_arr = arr[start_row:end_row, start_col:end_col]
+        return shifted_arr
+
+    def CalculateM0MultPVector(self):
+        global m0_mult_press_vector
+        m0_vector = self.ShiftArray(
+            M0_matrix, 0, inner_nodes_count,
+            inner_nodes_count, edge_nodes_count)
+        P_vector = [value for value in pressure_vector if value != 0]
+        m0_mult_press_vector = -np.dot(m0_vector, P_vector)
+        print("M0 * Вектор давления")
+        print(m0_mult_press_vector)
+
+    def ObjectsNodeConsumption(self):
+        col = 3
+        beginning_object_array = []
+        ending_object_array = []
+        node_consumption_vector.clear()
+        for row in range(self.HydraTableWidget.rowCount()):
+            beginning_edge_text = str(
+                self.HydraTableWidget.cellWidget(row, 1).currentText())
+            end_edge_text = str(
+                self.HydraTableWidget.cellWidget(row, 2).currentText())
+            beginning_object_array.append(beginning_edge_text)
+            ending_object_array.append(end_edge_text)
+
+        for row, object_name in enumerate(objects_name_list):
+            sum_beginning_node = sum(Q * 0.45 for beg_obj, Q in zip(
+                beginning_object_array,
+                path_consumption_vector) if beg_obj == object_name)
+            sum_ending_node = sum(Q * 0.55 for end_obj, Q in zip(
+                ending_object_array,
+                path_consumption_vector) if end_obj == object_name)
+            result = sum_beginning_node + sum_ending_node
+            node_consumption_vector.append(result)
+            item = QTableWidgetItem(str(result))
+            self.ObjectsTableWidget.setItem(row, col, item)
+        print("узловой расход")
+        print(node_consumption_vector)
+
+    def CalculateM0MultPVectorPlusQ(self):
+        m0_mult_press_vector_plus_Q.clear()
+        for index, vector in enumerate(m0_mult_press_vector):
+            result = vector - node_consumption_vector[index]
+            m0_mult_press_vector_plus_Q.append(result)
+        print("m0p+Q")
+        print(m0_mult_press_vector_plus_Q)
+
+    def CalculateP0Vector(self):
+        global P0_vector
+        matrix_1 = np.array(self.ShiftArray(
+            M0_matrix, 0, 0, inner_nodes_count, inner_nodes_count))
+        inverse_matrix_1 = np.linalg.inv(matrix_1)
+        matrix_2 = m0_mult_press_vector_plus_Q
+        P0_vector = np.dot(inverse_matrix_1, matrix_2)
+        print("P0 vector")
+        print(P0_vector)
+
     def CalculateAll(self):
         self.CreateEdgesArray()
+        self.CreatePathConsumptionArray()
+        self.ObjectsNodeConsumption()
 
+        self.CreatePressureArray()  # нужен полный список объектов
+        self.CreateNodesCount()  # нужен полный список объектов
         self.CreateVelocityArray()
         self.CreateDiameterArray()
         self.CreateLengthArray()
@@ -306,6 +398,9 @@ class HydraTable():
         self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
         self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
         self.CalculateM0Matrix()  # нужна матрица инцидентности и матрица R
+        self.CalculateM0MultPVector()  # вектор P, матрица M0, гран и внут узлы
+        self.CalculateM0MultPVectorPlusQ()  # M0P, Q
+        self.CalculateP0Vector()  # M0P+Q, M0
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
@@ -359,7 +454,7 @@ class HydraTable():
         # Визуализация графа
         A = nx.nx_agraph.to_agraph(graph)
         A.layout('dot')
-        filename = f"graphs_pic/topology{graph.edges}.png"
+        filename = f"graphs_pic/topology_{len(graph.edges)}.png"
         A.draw(filename)
         self.ShowTopology(filename)
 
@@ -417,7 +512,7 @@ class HydraTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getSaveFileName(
-                None, "Сохранить файл CSV", "",
+                None, "Сохранить Гидравлику как файл CSV", "",
                 "CSV Files (*.csv);;All Files (*)")
             if path:
                 with open(path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -453,7 +548,8 @@ class HydraTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getOpenFileName(
-                None, "Сохранить файл CSV", "", "CSV Files (*.csv)")
+                None, "Загрузить Гидравлику как файл CSV",
+                "", "CSV Files (*.csv)")
             if path:
                 with open(path, 'r', encoding='utf-8') as csvfile:
                     reader = csv.reader(csvfile)

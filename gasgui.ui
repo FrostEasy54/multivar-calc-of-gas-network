@@ -87,11 +87,6 @@
                 </column>
                 <column>
                  <property name="text">
-                  <string>Pгр, Па</string>
-                 </property>
-                </column>
-                <column>
-                 <property name="text">
                   <string>Qн, м3/ч</string>
                  </property>
                 </column>

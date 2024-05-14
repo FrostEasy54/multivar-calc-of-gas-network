@@ -200,6 +200,7 @@ M0_matrix = calculate_M0_matrix(
 
 # вектор давлений
 pressure_vector = [3000 if node == "ГРП" else 0 for node in nodes]
+print('Давление')
 print(pressure_vector)
 
 #количество граничных узлов

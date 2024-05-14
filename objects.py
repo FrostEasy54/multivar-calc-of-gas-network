@@ -76,7 +76,7 @@ class ObjectsTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getSaveFileName(
-                None, "Сохранить файл CSV", "",
+                None, "Сохранить Объекты как файл CSV", "",
                 "CSV Files (*.csv);;All Files (*)")
             if path:
                 with open(path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -102,7 +102,8 @@ class ObjectsTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getOpenFileName(
-                None, "Сохранить файл CSV", "", "CSV Files (*.csv)")
+                None, "Загрузить Объекты из файла CSV",
+                "", "CSV Files (*.csv)")
             if path:
                 with open(path, 'r', encoding='utf-8') as csvfile:
                     reader = csv.reader(csvfile)
