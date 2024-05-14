@@ -1,6 +1,6 @@
-from PyQt6.QtWidgets import QTableWidgetItem, QComboBox, QDoubleSpinBox, QFileDialog
+from PyQt6.QtWidgets import QTableWidgetItem, QComboBox
+from PyQt6.QtWidgets import QDoubleSpinBox, QFileDialog
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QDialog, QVBoxLayout, QLabel
-from PyQt6 import QtCore
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 
@@ -28,6 +28,10 @@ Darsi_friction_factor_vector = []
 hydraulic_friction_factor = []
 R_factor_vector = []
 m0_mult_press_vector_plus_Q = []
+x_k_vector = []
+s1_x_k_vector = []
+sigma_g_k_vector = []
+delta_p_k_plus_1_vector = []
 
 
 class ImageDialog(QDialog):
@@ -314,14 +318,17 @@ class HydraTable():
 
     def ShiftArray(self, matrix, row_offset, col_offset, height, width):
         arr = np.array(matrix)
-        rows, cols = arr.shape
-        # Вычисляем индексы начала и конца вырезаемой области
-        start_row = max(0, row_offset)
-        end_row = min(rows, row_offset + height)
-        start_col = max(0, col_offset)
-        end_col = min(cols, col_offset + width)
-        # Вырезаем нужную область из исходного массива
-        shifted_arr = arr[start_row:end_row, start_col:end_col]
+        if arr.ndim == 1:  # Проверяем, является ли массив одномерным
+            start_index = max(0, col_offset)
+            end_index = min(arr.shape[0], col_offset + width)
+            shifted_arr = arr[start_index:end_index]
+        else:
+            rows, cols = arr.shape
+            start_row = max(0, row_offset)
+            end_row = min(rows, row_offset + height)
+            start_col = max(0, col_offset)
+            end_col = min(cols, col_offset + width)
+            shifted_arr = arr[start_row:end_row, start_col:end_col]
         return shifted_arr
 
     def CalculateM0MultPVector(self):
@@ -371,13 +378,98 @@ class HydraTable():
 
     def CalculateP0Vector(self):
         global P0_vector
+        global p_k_vector
         matrix_1 = np.array(self.ShiftArray(
             M0_matrix, 0, 0, inner_nodes_count, inner_nodes_count))
         inverse_matrix_1 = np.linalg.inv(matrix_1)
         matrix_2 = m0_mult_press_vector_plus_Q
         P0_vector = np.dot(inverse_matrix_1, matrix_2)
+        p_k_vector = P0_vector
         print("P0 vector")
         print(P0_vector)
+        print("p(k) vector")
+        print(p_k_vector)
+
+    def CalculateYKVector(self):
+        global y_k_vector
+        matrix_1 = self.ShiftArray(
+            incidence_matrix_tr, 0, 0, len(edges_vector), inner_nodes_count)
+        matrix_2 = p_k_vector
+        matrix_3 = self.ShiftArray(
+            incidence_matrix_tr, 0, inner_nodes_count,
+            len(edges_vector), edge_nodes_count)
+        matrix_4 = [value for value in pressure_vector if value != 0]
+        y_k_vector = np.dot(matrix_1, matrix_2) + np.dot(matrix_3, matrix_4)
+        print("Y(K) vector")
+        print(y_k_vector)
+
+    def CalculateXKVector(self):
+        x_k_vector.clear()
+        for i, value in enumerate(y_k_vector):
+            x_k_vector.append(math.sqrt(
+                abs(value)/hydraulic_friction_factor[i]) * np.sign(value))
+        print('X(k) vector')
+        print(x_k_vector)
+
+    def Calculate1SXKVector(self):
+        s1_x_k_vector.clear()
+        for i, value in enumerate(x_k_vector):
+            s1_x_k_vector.append(
+                1 / (hydraulic_friction_factor[i] * abs(value)))
+        print("1/S(X)k vector")
+        print(s1_x_k_vector)
+
+    def Create1SXKMatrix(self):
+        global s1_x_k_matrix
+        matrix_size = len(s1_x_k_vector)
+        diagonal_matrix = np.zeros((matrix_size, matrix_size))
+        np.fill_diagonal(diagonal_matrix, s1_x_k_vector)
+        s1_x_k_matrix = diagonal_matrix
+        print("1/S(X)k matrix")
+        print(s1_x_k_matrix)
+
+    def CalculateAxKVector(self):
+        global Ax_k_vector
+        matrix_1 = incidence_matrix_tr.transpose()
+        matrix_2 = x_k_vector
+        Ax_k_vector = np.dot(matrix_1, matrix_2)
+        print("A(x)K vector")
+        print(Ax_k_vector)
+
+    def CalculateSigmaGKVector(self):
+        sigma_g_k_vector.clear()
+        for i, value in enumerate(Ax_k_vector):
+            sigma_g_k_vector.append(value + node_consumption_vector[i])
+        print("Sigma G(K) vector")
+        print(sigma_g_k_vector)
+
+    def CalculateMKMatrix(self):
+        global m_k_matrix
+        matrix_1 = incidence_matrix_tr.transpose()
+        matrix_2 = s1_x_k_matrix
+        m_k_matrix = 0.5 * np.dot(
+            np.dot(matrix_1, matrix_2), incidence_matrix_tr)
+        print("M(k) matrix")
+        print(m_k_matrix)
+
+    def CalculateDeltaPKVector(self):
+        global delta_p_k_vector
+        matrix_1 = self.ShiftArray(
+            m_k_matrix, 0, 0, inner_nodes_count, inner_nodes_count)
+        inverse_matrix_1 = np.linalg.inv(matrix_1)
+        matrix_2 = sigma_g_k_vector[:inner_nodes_count]
+        delta_p_k_vector = -np.dot(inverse_matrix_1, matrix_2)
+        print("Delta P(K) vector")
+        print(delta_p_k_vector)
+
+    def CalculateDeltaPKPlus1Vector(self):
+        delta_p_k_plus_1_vector.clear()
+        for i, value in enumerate(p_k_vector):
+            delta_p_k_plus_1_vector.append(value + delta_p_k_vector[i])
+        for i in range(edge_nodes_count):
+            delta_p_k_plus_1_vector.append(3000)
+        print("Delta P(k+1) vector")
+        print(delta_p_k_plus_1_vector)
 
     def CalculateAll(self):
         self.CreateEdgesArray()
@@ -401,6 +493,15 @@ class HydraTable():
         self.CalculateM0MultPVector()  # вектор P, матрица M0, гран и внут узлы
         self.CalculateM0MultPVectorPlusQ()  # M0P, Q
         self.CalculateP0Vector()  # M0P+Q, M0
+        self.CalculateYKVector()
+        self.CalculateXKVector()
+        self.Calculate1SXKVector()
+        self.Create1SXKMatrix()
+        self.CalculateAxKVector()
+        self.CalculateSigmaGKVector()
+        self.CalculateMKMatrix()
+        self.CalculateDeltaPKVector()
+        self.CalculateDeltaPKPlus1Vector()
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
