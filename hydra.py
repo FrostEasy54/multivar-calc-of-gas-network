@@ -31,7 +31,7 @@ m0_mult_press_vector_plus_Q = []
 x_k_vector = []
 s1_x_k_vector = []
 sigma_g_k_vector = []
-delta_p_k_plus_1_vector = []
+p_k_plus_1_vector = []
 
 
 class ImageDialog(QDialog):
@@ -51,14 +51,17 @@ class ImageDialog(QDialog):
 class HydraTable():
     def AddHydraRow(self):
         self.HydraTableWidget.insertRow(self.HydraTableWidget.rowCount())
-        self.HydraNumberSpinBox()
-        self.HydraBeginningComboBox()
-        self.HydraEndComboBox()
-        self.HydraLengthSpinBox()
-        self.HydraPathConsumptionDoubleSpinBox()
-        self.HydraPipeTypeComboBox()
-        self.HydraPipeDiameter()
-        self.HydraGasVelocity()
+        # Привязываем обработчики событий для новой строки
+        self.bindEventHandlersForRow(self.HydraTableWidget.rowCount() - 1)
+
+    def bindEventHandlersForRow(self, row):
+        self.HydraNumberSpinBox(row)
+        self.HydraBeginningComboBox(row)
+        self.HydraEndComboBox(row)
+        self.HydraLengthSpinBox(row)
+        self.HydraPathConsumptionDoubleSpinBox(row)
+        self.HydraPipeTypeComboBox(row)
+        self.HydraPipeDiameter(row)
 
     def RemoveHydraRow(self):
         if self.HydraTableWidget.rowCount() == 1:
@@ -69,10 +72,10 @@ class HydraTable():
             self.HydraTableWidget.removeRow(
                 self.HydraTableWidget.rowCount()-1)
 
-    def HydraNumberSpinBox(self):
+    def HydraNumberSpinBox(self, row):
         # Указываем столбец, для которого нужно установить SpinBox
         col = 0
-        current_row = self.HydraTableWidget.rowCount() - 1
+        current_row = row
         # Получаем значение номера помещения из предыдущей строки
         prev_row = self.HydraTableWidget.rowCount() - 2
         prev_widget = self.HydraTableWidget.cellWidget(prev_row, col)
@@ -82,52 +85,43 @@ class HydraTable():
         sb.setValue(prev_value + 1)
         self.HydraTableWidget.setCellWidget(current_row, col, sb)
 
-    def HydraBeginningComboBox(self):
+    def HydraBeginningComboBox(self, row):
         col = 1
-        row = self.HydraTableWidget.rowCount() - 1
         cb = QComboBox()
         cb.addItems(objects_name_list)
         self.HydraTableWidget.setCellWidget(row, col, cb)
 
-    def HydraEndComboBox(self):
+    def HydraEndComboBox(self, row):
         col = 2
-        row = self.HydraTableWidget.rowCount() - 1
         cb = QComboBox()
         cb.addItems(objects_name_list)
         self.HydraTableWidget.setCellWidget(row, col, cb)
 
-    def HydraLengthSpinBox(self):
+    def HydraLengthSpinBox(self, row):
         col = 3
-        row = self.HydraTableWidget.rowCount() - 1
         sb = QSpinBox()
         sb.setMaximum(1000)
         sb.setMinimum(0)
         self.HydraTableWidget.setCellWidget(row, col, sb)
 
-    def HydraPathConsumptionDoubleSpinBox(self):
+    def HydraPathConsumptionDoubleSpinBox(self, row):
         col = 4
-        row = self.HydraTableWidget.rowCount() - 1
         sb = QDoubleSpinBox()
         sb.setMaximum(1000)
         sb.setMinimum(0)
         self.HydraTableWidget.setCellWidget(row, col, sb)
-        self.HydraTableWidget.cellWidget(
-            row, col).valueChanged.connect(self.HydraGasVelocity)
 
-    def HydraPipeTypeComboBox(self):
+    def HydraPipeTypeComboBox(self, row):
         col = 5
-        row = self.HydraTableWidget.rowCount() - 1
         cb = QComboBox()
         cb.addItems(pipe_type_dict.keys())
         self.HydraTableWidget.setCellWidget(row, col, cb)
-        self.HydraTableWidget.cellWidget(
-            row, col).currentTextChanged.connect(self.HydraPipeDiameter)
-        self.HydraTableWidget.cellWidget(
-            row, col).currentTextChanged.connect(self.HydraGasVelocity)
+        # Передаем номер строки в лямбда-функцию
+        cb.currentTextChanged.connect(
+            lambda text, row=row: self.HydraPipeDiameter(row))
 
-    def HydraPipeDiameter(self):
+    def HydraPipeDiameter(self, row):
         col = 6
-        row = self.HydraTableWidget.rowCount() - 1
         combo_box_item = self.HydraTableWidget.cellWidget(row, 5)
         selected_pipe = combo_box_item.currentText()
         diameter = pipe_type_dict.get(selected_pipe, "Нет данных")
@@ -138,7 +132,8 @@ class HydraTable():
         col = 7
         row = self.HydraTableWidget.rowCount() - 1
         diameter = float(self.HydraTableWidget.item(row, 6).text())
-        Q = float(self.HydraTableWidget.cellWidget(row, 4).value())
+        Q = 0
+        # Q = float(self.HydraTableWidget.cellWidget(row, 4).value())
         area = (0.25 * math.pi * (diameter / 1000) ** 2)
         velocity = Q / (area * 3600)
         velocity_item = QTableWidgetItem(str(velocity))
@@ -162,11 +157,13 @@ class HydraTable():
         print('Вектор ребер')
         print(edges_vector)
 
-    def CreateVelocityArray(self):
+    def CreateVelocityArray(self, Q_array):
         gas_velocity_vector.clear()
-        for row in range(self.HydraTableWidget.rowCount()):
-            velocity = float(self.HydraTableWidget.item(row, 7).text())
+        for i in range(len(edges_vector)):
+            area = (0.25 * math.pi * (pipe_diameter_vector[i] / 1000) ** 2)
+            velocity = Q_array[i] / (area * 3600)
             gas_velocity_vector.append(velocity)
+        print("V вектор")
         print(gas_velocity_vector)
 
     def CreateDiameterArray(self):
@@ -384,11 +381,8 @@ class HydraTable():
         inverse_matrix_1 = np.linalg.inv(matrix_1)
         matrix_2 = m0_mult_press_vector_plus_Q
         P0_vector = np.dot(inverse_matrix_1, matrix_2)
-        p_k_vector = P0_vector
         print("P0 vector")
         print(P0_vector)
-        print("p(k) vector")
-        print(p_k_vector)
 
     def CalculateYKVector(self):
         global y_k_vector
@@ -462,38 +456,62 @@ class HydraTable():
         print("Delta P(K) vector")
         print(delta_p_k_vector)
 
-    def CalculateDeltaPKPlus1Vector(self):
-        delta_p_k_plus_1_vector.clear()
+    def CalculatePKPlus1Vector(self):
+        p_k_plus_1_vector.clear()
         for i, value in enumerate(p_k_vector):
-            delta_p_k_plus_1_vector.append(value + delta_p_k_vector[i])
+            p_k_plus_1_vector.append(value + delta_p_k_vector[i])
         for i in range(edge_nodes_count):
-            delta_p_k_plus_1_vector.append(3000)
-        print("Delta P(k+1) vector")
-        print(delta_p_k_plus_1_vector)
+            p_k_plus_1_vector.append(3000)
+        print("P(k+1) vector")
+        print(p_k_plus_1_vector)
 
-    def CalculateAll(self):
-        self.CreateEdgesArray()
-        self.CreatePathConsumptionArray()
-        self.ObjectsNodeConsumption()
+    def CalculateEpsG(self):
+        global eps_g
+        sigma_g_k_data = np.array(sigma_g_k_vector[:inner_nodes_count])
+        min_sigma = np.min(sigma_g_k_data)
+        max_sigma = np.max(sigma_g_k_data)
+        eps_g = max(abs(min_sigma), max_sigma)
+        print("eps G")
+        print(eps_g)
 
-        self.CreatePressureArray()  # нужен полный список объектов
-        self.CreateNodesCount()  # нужен полный список объектов
-        self.CreateVelocityArray()
-        self.CreateDiameterArray()
-        self.CreateLengthArray()
+    def IterationProcess(self):
+        global q_0
+        global q_k
+        q_0 = np.zeros(len(edges_vector))
+        q_k = q_0
+        eps = 1
+        while eps > 0.1:
+            pass
+
+    def CalculateinitialApprox(self):
+        self.CreateVelocityArray(np.zeros(len(edges_vector)))
         self.CalculateReynoldsNumber()
-        self.CreatePipeRoughnessFactor()
         self.CalculateDarsiFrictionFactor()
         self.CalculateHydraulicFrictionFactor()
         self.CalculateRFactor()
-
-        self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
         self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
         self.CalculateM0Matrix()  # нужна матрица инцидентности и матрица R
-        self.CalculateM0MultPVector()  # вектор P, матрица M0, гран и внут узлы
+        self.CalculateM0MultPVector()   # вектор P, матрица M0, гран и внут узл
         self.CalculateM0MultPVectorPlusQ()  # M0P, Q
         self.CalculateP0Vector()  # M0P+Q, M0
-        self.CalculateYKVector()
+        p_k_vector = P0_vector
+        print("P(k) vector")
+        print(p_k_vector)
+
+    def CalculateAll(self):
+        self.CreateEdgesArray()
+        self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
+        self.CreatePathConsumptionArray()
+        self.ObjectsNodeConsumption()
+        self.CreatePressureArray()  # нужен полный список объектов
+        self.CreateNodesCount()  # нужен полный список объектов
+        self.CreateDiameterArray()
+        self.CreateLengthArray()
+        self.CreatePipeRoughnessFactor()
+
+        self.CalculateinitialApprox()
+
+        '''self.CalculateYKVector()
         self.CalculateXKVector()
         self.Calculate1SXKVector()
         self.Create1SXKMatrix()
@@ -501,7 +519,8 @@ class HydraTable():
         self.CalculateSigmaGKVector()
         self.CalculateMKMatrix()
         self.CalculateDeltaPKVector()
-        self.CalculateDeltaPKPlus1Vector()
+        self.CalculatePKPlus1Vector()
+        self.CalculateEpsG()'''
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
@@ -634,11 +653,9 @@ class HydraTable():
                         Q = self.HydraTableWidget.cellWidget(row, 4).value()
                         pipe_type = self.HydraTableWidget.cellWidget(
                             row, 5).currentText()
-                        diameter = self.HydraTableWidget.item(row, 6).text()
-                        gas_speed = self.HydraTableWidget.item(row, 7).text()
                         writer.writerow(
                             [hydra_number, beginning_object, end_object,
-                             length, Q, pipe_type, diameter, gas_speed])
+                             length, Q, pipe_type])
                 QMessageBox().information(None, "Сохранено",
                                           f"Данные успешно сохранены в файл CSV: {path}")  # noqa E501
         except Exception as e:
@@ -677,14 +694,6 @@ class HydraTable():
                                 elif col == 5:
                                     self.HydraTableWidget.cellWidget(
                                         row - 1, col).setCurrentText(str(data))
-                                elif col == 6:
-                                    item = QTableWidgetItem(data)
-                                    self.HydraTableWidget.setItem(
-                                        row - 1, col, item)
-                                elif col == 7:
-                                    item = QTableWidgetItem(data)
-                                    self.HydraTableWidget.setItem(
-                                        row - 1, col, item)
             self.RemoveHydraRow()
             QMessageBox().information(None, "Импорт завершен",
                                       "Данные успешно импортированы.")

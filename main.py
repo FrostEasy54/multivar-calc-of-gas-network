@@ -49,14 +49,13 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.ActionSaveHydra.triggered.connect(self.HydraSaveToCSV)
         self.ActionLoadHydra.triggered.connect(self.HydraLoadFromCSV)
         # заполнение первой строки
-        self.HydraBeginningComboBox()
-        self.HydraEndComboBox()
-        self.HydraNumberSpinBox()
-        self.HydraLengthSpinBox()
-        self.HydraPathConsumptionDoubleSpinBox()
-        self.HydraPipeTypeComboBox()
-        self.HydraPipeDiameter()
-        self.HydraGasVelocity()
+        self.HydraBeginningComboBox(0)
+        self.HydraEndComboBox(0)
+        self.HydraNumberSpinBox(0)
+        self.HydraLengthSpinBox(0)
+        self.HydraPathConsumptionDoubleSpinBox(0)
+        self.HydraPipeTypeComboBox(0)
+        self.HydraPipeDiameter(0)
 
 
 def main():
