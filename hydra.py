@@ -32,6 +32,7 @@ x_k_vector = []
 s1_x_k_vector = []
 sigma_g_k_vector = []
 p_k_plus_1_vector = []
+p_k_vector = []
 
 
 class ImageDialog(QDialog):
@@ -154,8 +155,6 @@ class HydraTable():
                 self.HydraTableWidget.cellWidget(row, 2).currentText())
             edge = tuple((beginning_edge_text, end_edge_text))
             edges_vector.append(edge)
-        print('Вектор ребер')
-        print(edges_vector)
 
     def CreateVelocityArray(self, Q_array):
         gas_velocity_vector.clear()
@@ -171,26 +170,23 @@ class HydraTable():
         for row in range(self.HydraTableWidget.rowCount()):
             diameter = float(self.HydraTableWidget.item(row, 6).text())
             pipe_diameter_vector.append(diameter)
-        print(pipe_diameter_vector)
 
     def CreateLengthArray(self):
         pipe_length_vector.clear()
         for row in range(self.HydraTableWidget.rowCount()):
             length = int(self.HydraTableWidget.cellWidget(row, 3).value())
             pipe_length_vector.append(length)
-        print(pipe_length_vector)
 
     def CalculateReynoldsNumber(self):
         Reynolds_number_vector.clear()
-        for i in range(len(gas_velocity_vector)):
+        for i in range(len(edges_vector)):
             Reynolds_number = gas_velocity_vector[i] * \
                 pipe_diameter_vector[i] / 1000 / NATURAL_GAS_VISCOSITY
             Reynolds_number_vector.append(Reynolds_number)
-        print(Reynolds_number_vector)
 
     def CreatePipeRoughnessFactor(self):
         roughness_factor_vector.clear()
-        for i in range(len(gas_velocity_vector)):
+        for i in range(len(edges_vector)):
             material_name = self.HydraTableWidget.cellWidget(
                 i, 5).currentText().split()[0]
             if material_name in roughness_factor_dict:
@@ -198,12 +194,10 @@ class HydraTable():
                     roughness_factor_dict[material_name])
             else:
                 roughness_factor_vector.append(0)
-        print("---------------------")
-        print(roughness_factor_vector)
 
     def CalculateDarsiFrictionFactor(self):
         Darsi_friction_factor_vector.clear()
-        for i in range(len(gas_velocity_vector)):
+        for i in range(len(edges_vector)):
             roughness_factor = roughness_factor_dict.get('Сталь')
             Reynolds_roughness_diameter_ratio = Reynolds_number_vector[i] * \
                 roughness_factor / pipe_diameter_vector[i]
@@ -236,7 +230,6 @@ class HydraTable():
                     ((2 * math.log10(3.7 /
                      (roughness_factor/pipe_diameter_vector[i])))**2)
                 Darsi_friction_factor_vector.append(friction_factor)
-        print(Darsi_friction_factor_vector)
 
     def CalculateHydraulicFrictionFactor(self):
         hydraulic_friction_factor.clear()
@@ -271,14 +264,14 @@ class HydraTable():
             incidence_matrix[node1_index, edge_index] = 1
             incidence_matrix[node2_index, edge_index] = -1
         incidence_matrix_tr = incidence_matrix.transpose()
-
+        '''
         table = PrettyTable()
         table.field_names = ['Участки/Узлы'] + objects_name_list
         for i, row in enumerate(incidence_matrix_tr):
             table.add_row([f"{edges_vector[i]}"] + list(row))
 
         # Выводим таблицу с использованием PrettyTable
-        print(table)
+        print(table)'''
 
     def CreateRFactorMatrix(self):
         global R_matrix
@@ -286,7 +279,6 @@ class HydraTable():
         diagonal_R_matrix = np.zeros((matrix_size, matrix_size))
         np.fill_diagonal(diagonal_R_matrix, R_factor_vector)
         R_matrix = diagonal_R_matrix
-        print(R_matrix)
 
     def CalculateM0Matrix(self):
         global M0_matrix
@@ -375,7 +367,6 @@ class HydraTable():
 
     def CalculateP0Vector(self):
         global P0_vector
-        global p_k_vector
         matrix_1 = np.array(self.ShiftArray(
             M0_matrix, 0, 0, inner_nodes_count, inner_nodes_count))
         inverse_matrix_1 = np.linalg.inv(matrix_1)
@@ -388,7 +379,9 @@ class HydraTable():
         global y_k_vector
         matrix_1 = self.ShiftArray(
             incidence_matrix_tr, 0, 0, len(edges_vector), inner_nodes_count)
-        matrix_2 = p_k_vector
+        matrix_2 = p_k_vector[:inner_nodes_count]
+        print("матрица 2")
+        print(matrix_2)
         matrix_3 = self.ShiftArray(
             incidence_matrix_tr, 0, inner_nodes_count,
             len(edges_vector), edge_nodes_count)
@@ -457,8 +450,11 @@ class HydraTable():
         print(delta_p_k_vector)
 
     def CalculatePKPlus1Vector(self):
+        global delta_p_k_vector
+        print("P(K) vector")
+        print(p_k_vector)
         p_k_plus_1_vector.clear()
-        for i, value in enumerate(p_k_vector):
+        for i, value in enumerate(p_k_vector[:-1]):
             p_k_plus_1_vector.append(value + delta_p_k_vector[i])
         for i in range(edge_nodes_count):
             p_k_plus_1_vector.append(3000)
@@ -474,31 +470,7 @@ class HydraTable():
         print("eps G")
         print(eps_g)
 
-    def IterationProcess(self):
-        global q_0
-        global q_k
-        q_0 = np.zeros(len(edges_vector))
-        q_k = q_0
-        eps = 1
-        while eps > 0.1:
-            pass
-
-    def CalculateinitialApprox(self):
-        self.CreateVelocityArray(np.zeros(len(edges_vector)))
-        self.CalculateReynoldsNumber()
-        self.CalculateDarsiFrictionFactor()
-        self.CalculateHydraulicFrictionFactor()
-        self.CalculateRFactor()
-        self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
-        self.CalculateM0Matrix()  # нужна матрица инцидентности и матрица R
-        self.CalculateM0MultPVector()   # вектор P, матрица M0, гран и внут узл
-        self.CalculateM0MultPVectorPlusQ()  # M0P, Q
-        self.CalculateP0Vector()  # M0P+Q, M0
-        p_k_vector = P0_vector
-        print("P(k) vector")
-        print(p_k_vector)
-
-    def CalculateAll(self):
+    def CreateinitialBasic(self):
         self.CreateEdgesArray()
         self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
         self.CreatePathConsumptionArray()
@@ -509,18 +481,74 @@ class HydraTable():
         self.CreateLengthArray()
         self.CreatePipeRoughnessFactor()
 
-        self.CalculateinitialApprox()
+    def CalculateinitialApprox(self):
+        global P0_vector
+        Q = np.zeros(len(edges_vector))
+        self.CreateVelocityArray(Q)
+        self.CalculateReynoldsNumber()
+        self.CalculateDarsiFrictionFactor()
+        self.CalculateHydraulicFrictionFactor()
+        self.CalculateRFactor()
+        self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
+        self.CalculateM0Matrix()  # нужна матрица инцидентности и матрица R
+        self.CalculateM0MultPVector()   # вектор P, матрица M0, гран и внут узл
+        self.CalculateM0MultPVectorPlusQ()  # M0P, Q
+        self.CalculateP0Vector()  # M0P+Q, M0
+        for value in P0_vector:
+            p_k_vector.append(value)
+        self.CalculateYKVector()  # нужна матрица инцидент и P(K) вектор
+        self.CalculateXKVector()  # нужен вектор гидро давления и y(k)
+        self.Calculate1SXKVector()  # нужен вектор гидро давления и x(k)
+        self.Create1SXKMatrix()  # нужен 1/Sx(K) вектор
+        self.CalculateAxKVector()  # инцидент и x(k)
+        self.CalculateSigmaGKVector()  # A(x)KV и node_consumpt
+        self.CalculateMKMatrix()  # инцидент и 1/Sx(K) матр
+        self.CalculateDeltaPKVector()  # M(k) матрица и sigmaG(k) вектор
+        self.CalculatePKPlus1Vector()  # p(k) вектор и delta
+        self.CalculateEpsG()  # sigmaG(k)
 
-        '''self.CalculateYKVector()
-        self.CalculateXKVector()
-        self.Calculate1SXKVector()
-        self.Create1SXKMatrix()
-        self.CalculateAxKVector()
-        self.CalculateSigmaGKVector()
-        self.CalculateMKMatrix()
-        self.CalculateDeltaPKVector()
-        self.CalculatePKPlus1Vector()
-        self.CalculateEpsG()'''
+
+    def CalculateIterations(self, Q):
+        self.CreateVelocityArray(Q)
+        self.CalculateReynoldsNumber()
+        self.CalculateDarsiFrictionFactor()
+        self.CalculateHydraulicFrictionFactor()
+        self.CalculateRFactor()
+        self.CreateRFactorMatrix()  # нужно чтоб существовал R Factor
+        self.CalculateM0Matrix()  # нужна матрица инцидентности и матрица R
+        self.CalculateM0MultPVector()   # вектор P, матрица M0, гран и внут узл
+        self.CalculateM0MultPVectorPlusQ()  # M0P, Q
+        self.CalculateP0Vector()  # M0P+Q, M0
+        self.CalculateYKVector()  # нужна матрица инцидент и P(K) вектор
+        self.CalculateXKVector()  # нужен вектор гидро давления и y(k)
+        self.Calculate1SXKVector()  # нужен вектор гидро давления и x(k)
+        self.Create1SXKMatrix()  # нужен 1/Sx(K) вектор
+        self.CalculateAxKVector()  # инцидент и x(k)
+        self.CalculateSigmaGKVector()  # A(x)KV и node_consumpt
+        self.CalculateMKMatrix()  # инцидент и 1/Sx(K) матр
+        self.CalculateDeltaPKVector()  # M(k) матрица и sigmaG(k) вектор
+        self.CalculatePKPlus1Vector()  # p(k) вектор и delta
+        self.CalculateEpsG()  # sigmaG(k)
+
+    def IterationProcess(self):
+        global Q_k
+        eps = 1
+        count = 1
+        while eps > 0.1:
+            print(f"Начало итерации--{count}")
+            Q_k = x_k_vector
+            p_k_vector.clear()
+            for value in p_k_plus_1_vector:
+                p_k_vector.append(value)
+            self.CalculateIterations(Q_k)
+            eps = eps_g
+            print(f"Конец итерации--{count}")
+            count += 1
+
+    def CalculateAll(self):
+        self.CreateinitialBasic()
+        self.CalculateinitialApprox()
+        self.IterationProcess()
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
