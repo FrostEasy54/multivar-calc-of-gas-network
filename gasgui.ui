@@ -239,11 +239,6 @@
               </column>
               <column>
                <property name="text">
-                <string>Q на участке, н.м3/ч</string>
-               </property>
-              </column>
-              <column>
-               <property name="text">
                 <string>Давление в начале участка</string>
                </property>
               </column>
@@ -436,7 +431,7 @@
     <property name="title">
      <string>Графики</string>
     </property>
-    <addaction name="actionHeatInputGraph"/>
+    <addaction name="ActionObjectsPiezo"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="clear"/>
@@ -552,12 +547,12 @@
     <string>Авторы</string>
    </property>
   </action>
-  <action name="actionHeatInputGraph">
+  <action name="ActionObjectsPiezo">
    <property name="enabled">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
    <property name="text">
-    <string>Графики Теплопоступлений</string>
+    <string>Пьезометр</string>
    </property>
   </action>
   <action name="actionNormativeDocs">

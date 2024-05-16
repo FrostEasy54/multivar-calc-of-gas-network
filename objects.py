@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QTableWidgetItem, QComboBox
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QFileDialog
-
+import matplotlib.pyplot as plt
 import csv
 
 objects_name_list = []
@@ -71,6 +71,29 @@ class ObjectsTable():
         self.AddObjectsRow()
         objects_name_list.clear()
         objects_dict.clear()
+
+    def PlotPiezo(self):
+        pressures = []
+        objects = []
+        for row in range(self.ObjectsTableWidget.rowCount()):
+            object_name = self.ObjectsTableWidget.item(row, 2).text()
+            pressure = float(self.ObjectsTableWidget.item(row, 4).text())
+            pressures.append(pressure)
+            objects.append(object_name)
+        grp_index = objects.index("ГРП")
+        pressures.insert(0, pressures.pop(grp_index))
+        objects.insert(0, objects.pop(grp_index))
+        plt.figure()
+        plt.plot(objects, pressures, marker='o', linestyle='-', markersize=8)
+        plt.xlabel('Узлы')
+        plt.ylabel('Давление, Па')
+        plt.title('График перепада давлений')
+        #plt.grid(True)
+        plt.ylim(0, max(pressures)+500)
+        for i, (x, y) in enumerate(zip(objects, pressures)):
+            plt.text(x, y, f'{y}', ha='left', va='bottom')
+        plt.tight_layout()
+        plt.show()
 
     def ObjectsSaveToCSV(self):
         try:

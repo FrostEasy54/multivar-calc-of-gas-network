@@ -29,6 +29,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
 
         self.ActionSaveObjects.triggered.connect(self.ObjectsSaveToCSV)
         self.ActionLoadObjects.triggered.connect(self.ObjectsLoadFromCSV)
+        self.ActionObjectsPiezo.triggered.connect(self.PlotPiezo)
         # заполнение первой строки
         self.ObjectsTypeComboBox()
         self.ObjectsNumberSpinBox()

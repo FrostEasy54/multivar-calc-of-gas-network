@@ -2,7 +2,7 @@ from PyQt6.QtWidgets import QTableWidgetItem, QComboBox
 from PyQt6.QtWidgets import QDoubleSpinBox, QFileDialog
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QDialog, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QPixmap
+from PyQt6.QtGui import QPixmap, QColor
 
 from prettytable import PrettyTable
 import numpy as np
@@ -130,17 +130,6 @@ class HydraTable():
         diameter_item = QTableWidgetItem(str(diameter))
         self.HydraTableWidget.setItem(row, col, diameter_item)
 
-    def HydraGasVelocity(self):
-        col = 7
-        row = self.HydraTableWidget.rowCount() - 1
-        diameter = float(self.HydraTableWidget.item(row, 6).text())
-        Q = 0
-        # Q = float(self.HydraTableWidget.cellWidget(row, 4).value())
-        area = (0.25 * math.pi * (diameter / 1000) ** 2)
-        velocity = Q / (area * 3600)
-        velocity_item = QTableWidgetItem(str(velocity))
-        self.HydraTableWidget.setItem(row, col, velocity_item)
-
     def CreatePathConsumptionArray(self):
         path_consumption_vector.clear()
         for row in range(self.HydraTableWidget.rowCount()):
@@ -246,6 +235,9 @@ class HydraTable():
     def CalculateRFactor(self):
         R_factor_vector.clear()
         for i in range(len(gas_velocity_vector)):
+            if hydraulic_friction_factor[i] < 0:
+                QMessageBox().warning(None, "Ошибка вычисления", "Невозможно вычислить корень из отрицательного числа.")  # noqa E501
+                return
             R_factor = 1 / ((hydraulic_friction_factor[i]) ** 0.5)
             R_factor_vector.append(R_factor)
         print("Vector R\n")
@@ -265,14 +257,14 @@ class HydraTable():
             incidence_matrix[node1_index, edge_index] = 1
             incidence_matrix[node2_index, edge_index] = -1
         incidence_matrix_tr = incidence_matrix.transpose()
-        '''
+        
         table = PrettyTable()
         table.field_names = ['Участки/Узлы'] + objects_name_list
         for i, row in enumerate(incidence_matrix_tr):
             table.add_row([f"{edges_vector[i]}"] + list(row))
-
+        print("Матрица инцидентности")
         # Выводим таблицу с использованием PrettyTable
-        print(table)'''
+        print(table)
 
     def CreateRFactorMatrix(self):
         global R_matrix
@@ -353,7 +345,7 @@ class HydraTable():
                 path_consumption_vector) if end_obj == object_name)
             result = sum_beginning_node + sum_ending_node
             node_consumption_vector.append(result)
-            item = QTableWidgetItem(str(result))
+            item = QTableWidgetItem(f"{result:.1f}")
             self.ObjectsTableWidget.setItem(row, col, item)
         print("узловой расход")
         print(node_consumption_vector)
@@ -457,7 +449,6 @@ class HydraTable():
         p_k_plus_1_vector.clear()
         for i, value in enumerate(delta_p_k_vector):
             p_k_plus_1_vector.append(value + p_k_vector[i])
-        p_k_plus_1_vector.append(3000)
         print("P(k+1) vector")
         print(p_k_plus_1_vector)
 
@@ -577,6 +568,33 @@ class HydraTable():
         self.IterationProcess()
         print("Q(k)")
         print(Q_k)
+        self.HydraGasVelocity()
+        self.ObjectsPressure()
+
+    def HydraGasVelocity(self):
+        col = 7
+        max_index = gas_velocity_vector.index(max(gas_velocity_vector))
+        for row in range(self.HydraTableWidget.rowCount()):
+            item = QTableWidgetItem(f"{gas_velocity_vector[row]:.3f}")
+            if row == max_index:
+                item.setBackground(QColor(255, 0, 0))
+            self.HydraTableWidget.setItem(row, col, item)
+
+    def ObjectsPressure(self):
+        col = 4
+        min_index = p_k_plus_1_vector.index(min(p_k_plus_1_vector))
+        for row in range(self.ObjectsTableWidget.rowCount()):
+            if self.ObjectsTableWidget.cellWidget(
+                    row, 1).currentText() == "ГРП":
+                item = QTableWidgetItem("3000")
+            else:
+                if row < len(p_k_plus_1_vector):
+                    item = QTableWidgetItem(f"{p_k_plus_1_vector[row]:.1f}")
+                else:
+                    item = QTableWidgetItem("")
+            if row == min_index:
+                item.setBackground(QColor(255, 0, 0))
+            self.ObjectsTableWidget.setItem(row, col, item)
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
