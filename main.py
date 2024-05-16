@@ -43,9 +43,12 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         # соединение кнопок для таблицы Гидравлика
         self.AddRowHydraPushButton.clicked.connect(self.AddHydraRow)
         self.RemoveRowHydraPushButton.clicked.connect(self.RemoveHydraRow)
-        self.ShowTopologyPushButton.clicked.connect(self.ShowTopology)
         self.BuildTopologyPushButton.clicked.connect(self.BuildTopology)
         self.CalculatePushButton.clicked.connect(self.CalculateAll)
+        self.AddVariantPushButton.clicked.connect(self.HydraAddVariant)
+        self.DeleteVariantPushButton.clicked.connect(self.HydraDropVariant)
+        self.SaveVariantPushButton.clicked.connect(self.SaveVariantData)
+        self.VariantComboBox.currentTextChanged.connect(self.LoadVariantData)
 
         self.ActionSaveHydra.triggered.connect(self.HydraSaveToCSV)
         self.ActionLoadHydra.triggered.connect(self.HydraLoadFromCSV)

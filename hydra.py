@@ -3,6 +3,7 @@ from PyQt6.QtWidgets import QDoubleSpinBox, QFileDialog
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QDialog, QVBoxLayout, QLabel
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QColor
+from PyQt6 import QtWidgets
 
 from prettytable import PrettyTable
 import numpy as np
@@ -34,6 +35,7 @@ sigma_g_k_vector = []
 p_k_plus_1_vector = []
 p_k_vector = []
 proportion_q_k_pl_1_to_q_k = []
+variant_data = {}
 
 
 class ImageDialog(QDialog):
@@ -257,14 +259,14 @@ class HydraTable():
             incidence_matrix[node1_index, edge_index] = 1
             incidence_matrix[node2_index, edge_index] = -1
         incidence_matrix_tr = incidence_matrix.transpose()
-        
-        table = PrettyTable()
+
+        '''        table = PrettyTable()
         table.field_names = ['Участки/Узлы'] + objects_name_list
         for i, row in enumerate(incidence_matrix_tr):
             table.add_row([f"{edges_vector[i]}"] + list(row))
         print("Матрица инцидентности")
         # Выводим таблицу с использованием PrettyTable
-        print(table)
+        print(table)'''
 
     def CreateRFactorMatrix(self):
         global R_matrix
@@ -362,6 +364,8 @@ class HydraTable():
         global P0_vector
         matrix_1 = np.array(self.ShiftArray(
             M0_matrix, 0, 0, inner_nodes_count, inner_nodes_count))
+        print("matrix_1")
+        print(matrix_1)
         inverse_matrix_1 = np.linalg.inv(matrix_1)
         matrix_2 = m0_mult_press_vector_plus_Q
         P0_vector = np.dot(inverse_matrix_1, matrix_2)
@@ -699,6 +703,24 @@ class HydraTable():
         return False
 
     def ClearHydraTable(self):
+        edges_vector.clear()
+        path_consumption_vector.clear()
+        node_consumption_vector.clear()
+        gas_velocity_vector.clear()
+        pipe_diameter_vector.clear()
+        pipe_length_vector.clear()
+        Reynolds_number_vector.clear()
+        roughness_factor_vector.clear()
+        Darsi_friction_factor_vector.clear()
+        hydraulic_friction_factor.clear()
+        R_factor_vector.clear()
+        m0_mult_press_vector_plus_Q.clear()
+        x_k_vector.clear()
+        s1_x_k_vector.clear()
+        sigma_g_k_vector.clear()
+        p_k_plus_1_vector.clear()
+        p_k_vector.clear()
+        proportion_q_k_pl_1_to_q_k.clear()
         self.HydraTableWidget.setRowCount(0)
         self.AddHydraRow()
 
@@ -774,3 +796,45 @@ class HydraTable():
         except Exception as e:
             QMessageBox().critical(None, "Ошибка",
                                    f"Произошла ошибка при загрузке: {e}")
+
+    def HydraAddVariant(self):
+        current_text = self.VariantComboBox.currentText()
+        if current_text.startswith("Вариант"):
+            variant_number = int(current_text.split(" ")[1])
+            new_variant_text = f"Вариант {variant_number + 1}"
+            if new_variant_text not in [
+                    self.VariantComboBox.itemText(i) for i in range(
+                        self.VariantComboBox.count())]:
+                self.VariantComboBox.addItem(new_variant_text)
+
+    def HydraDropVariant(self):
+        current_index = self.VariantComboBox.currentIndex()
+        if current_index != 0:
+            self.VariantComboBox.removeItem(current_index)
+
+    def SaveVariantData(self):
+        current_variant = self.VariantComboBox.currentText()
+        for row in range(self.HydraTableWidget.rowCount()):
+            row_data = []
+            for col in range(self.HydraTableWidget.columnCount()):
+                item = self.HydraTableWidget.item(row, col)
+                widget = self.HydraTableWidget.cellWidget(row, col)
+                if widget:
+                    if isinstance(widget, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)):  # noqa E501
+                        row_data.append(widget.value())
+                    elif isinstance(widget, QtWidgets.QComboBox):
+                        row_data.append(widget.currentText())
+                elif item is not None and item.text():
+                    row_data.append(item.text())
+            if row_data:
+                variant_data.setdefault(current_variant, []).append(row_data)
+        print(variant_data)
+
+    def LoadVariantData(self):
+        current_variant = self.VariantComboBox.currentText()
+        if current_variant in variant_data:
+            data = variant_data[current_variant]
+            self.ClearHydraTable()
+        # Заполняем таблицу данными
+            for row, row_data in enumerate(data):
+                self.AddHydraRow()
