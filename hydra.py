@@ -380,13 +380,17 @@ class HydraTable():
         matrix_1 = self.ShiftArray(
             incidence_matrix_tr, 0, 0, len(edges_vector), inner_nodes_count)
         matrix_2 = p_k_vector[:inner_nodes_count]
-        print("матрица 2")
-        print(matrix_2)
+        result_1 = np.dot(matrix_1, matrix_2)
+        print("Результ 1")
+        print(result_1)
         matrix_3 = self.ShiftArray(
             incidence_matrix_tr, 0, inner_nodes_count,
             len(edges_vector), edge_nodes_count)
         matrix_4 = [value for value in pressure_vector if value != 0]
-        y_k_vector = np.dot(matrix_1, matrix_2) + np.dot(matrix_3, matrix_4)
+        result_2 = np.dot(matrix_3, matrix_4)
+        print("Результ 2")
+        print(result_2)
+        y_k_vector = result_1 + result_2
         print("Y(K) vector")
         print(y_k_vector)
 
@@ -454,10 +458,9 @@ class HydraTable():
         print("P(K) vector")
         print(p_k_vector)
         p_k_plus_1_vector.clear()
-        for i, value in enumerate(p_k_vector[:-1]):
-            p_k_plus_1_vector.append(value + delta_p_k_vector[i])
-        for i in range(edge_nodes_count):
-            p_k_plus_1_vector.append(3000)
+        for i, value in enumerate(delta_p_k_vector):
+            p_k_plus_1_vector.append(value + p_k_vector[i])
+        p_k_plus_1_vector.append(3000)
         print("P(k+1) vector")
         print(p_k_plus_1_vector)
 
@@ -507,7 +510,6 @@ class HydraTable():
         self.CalculatePKPlus1Vector()  # p(k) вектор и delta
         self.CalculateEpsG()  # sigmaG(k)
 
-
     def CalculateIterations(self, Q):
         self.CreateVelocityArray(Q)
         self.CalculateReynoldsNumber()
@@ -532,15 +534,17 @@ class HydraTable():
 
     def IterationProcess(self):
         global Q_k
+        global Q_0
         eps = 1
         count = 1
+        Q_0 = np.zeros(len(edges_vector))
         while eps > 0.1:
             print(f"Начало итерации--{count}")
             Q_k = x_k_vector
             p_k_vector.clear()
             for value in p_k_plus_1_vector:
                 p_k_vector.append(value)
-            self.CalculateIterations(Q_k)
+            self.CalculateIterations(Q_0)
             eps = eps_g
             print(f"Конец итерации--{count}")
             count += 1

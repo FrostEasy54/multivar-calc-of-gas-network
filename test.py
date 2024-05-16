@@ -47,7 +47,7 @@ def create_incidence_matrix(nodes, edges):
 
 
 incidence_matrix_tr = create_incidence_matrix(nodes, edges)  # работает
-#print(incidence_matrix_tr)
+# print(incidence_matrix_tr)
 
 inner_diameteres = {(2, 1): 51, (13, 16,): 151, (6, 5): 51, (2, 3): 54,
                     (4, 3): 100, (8, 4): 100, (8, 7): 151, (6, 7): 151,
@@ -179,7 +179,7 @@ def print_matrix(matrix):
     for row in matrix:
         formatted_row = ["{:.2f}".format(element) for element in row]
         table.add_row(formatted_row)
-    print(table)
+    # print(table)
 
 
 # print_matrix(R_factor_matrix)
@@ -194,41 +194,88 @@ def calculate_M0_matrix(transposed_incidence_matrix, R_factor_matrix):
 
 M0_matrix = calculate_M0_matrix(
     incidence_matrix_tr, R_factor_matrix)  # работает!
-#print(M0_matrix)
-#print_matrix(M0_matrix)
+# print(M0_matrix)
+# print_matrix(M0_matrix)
 
 
 # вектор давлений
 pressure_vector = [3000 if node == "ГРП" else 0 for node in nodes]
-print('Давление')
-print(pressure_vector)
+# print('Давление')
+# print(pressure_vector)
 
-#количество граничных узлов
+# количество граничных узлов
 edge_nodes_count = sum(1 for node in nodes if node == "ГРП")
 inner_nodes_count = len(nodes) - edge_nodes_count
 # Cмещение матрицы
-def shift_array(matrix, row_offset, col_offset, height, width):
-    arr = np.array(matrix)
-    rows, cols = arr.shape
-    # Вычисляем индексы начала и конца вырезаемой области
-    start_row = max(0, row_offset)
-    end_row = min(rows, row_offset + height)
-    start_col = max(0, col_offset)
-    end_col = min(cols, col_offset + width)
-    # Вырезаем нужную область из исходного массива
-    shifted_arr = arr[start_row:end_row, start_col:end_col]
-    return shifted_arr
 
-#print(shift_array(M0_matrix, 0, 17, 17, 2))
+
+def ShiftArray(matrix, row_offset, col_offset, height, width):
+    arr = np.array(matrix)
+    if arr.ndim == 1:  # Проверяем, является ли массив одномерным
+        start_index = max(0, col_offset)
+        end_index = min(arr.shape[0], col_offset + width)
+        shifted_arr = arr[start_index:end_index]
+    else:
+        rows, cols = arr.shape
+        start_row = max(0, row_offset)
+        end_row = min(rows, row_offset + height)
+        start_col = max(0, col_offset)
+        end_col = min(cols, col_offset + width)
+        shifted_arr = arr[start_row:end_row, start_col:end_col]
+    return shifted_arr
+# print(shift_array(M0_matrix, 0, 17, 17, 2))
+
 
 def m0_vector_mult_P_vector(m0_matrix, pressure_vector, edge_nodes_count, inner_nodes_count):
-    m0_vector = shift_array(m0_matrix, 0, inner_nodes_count, inner_nodes_count, edge_nodes_count)
+    m0_vector = ShiftArray(m0_matrix, 0, inner_nodes_count,
+                           inner_nodes_count, edge_nodes_count)
     P_vector = [value for value in pressure_vector if value != 0]
     result = -np.dot(m0_vector, P_vector)
     return result
 
-print(m0_vector_mult_P_vector(M0_matrix, pressure_vector, edge_nodes_count, inner_nodes_count)) # работает !!!
+# print(m0_vector_mult_P_vector(M0_matrix, pressure_vector, edge_nodes_count, inner_nodes_count)) # работает !!!
 
 # 3.3
+
+
 def calculate_1_S_Xk_matrix():
     pass
+
+
+p_k_vector = [2424.4607741365794, 2456.72499555618, 2390.2209687400755,
+              2432.70234199842, 2463.314096129302, 2622.3867051973994,
+              2614.00556846254, 2630.596341823753,
+              2663.699348740133, 2712.179614848253, 2873.274155383222,
+              2999.7348758605795, 2701.100477324184, 2342.5799183940235,
+              2469.7535444744763, 2469.57415046951, 2420.847493459498, 3000]
+
+
+def CalculateYKVector():
+    global y_k_vector
+    matrix_1 = ShiftArray(
+        incidence_matrix_tr, 0, 0, len(Q_edge), inner_nodes_count)
+    matrix_2 = p_k_vector[:inner_nodes_count]
+    print("матрица 1")
+    print(matrix_1)
+    print("матрица 2")
+    print(matrix_2)
+    matrix_3 = ShiftArray(
+        incidence_matrix_tr, 0, inner_nodes_count,
+        len(Q_edge), edge_nodes_count)
+    matrix_4 = [value for value in pressure_vector if value != 0]
+    print("матрица 3")
+    print(matrix_3)
+    print("матрица 4")
+    print(matrix_4)
+    result_1 = np.dot(matrix_1, matrix_2)
+    result_2 = np.dot(matrix_3, matrix_4)
+    print("Результ 1")
+    print(result_1)
+    print("Результ 2")
+    print(result_2)
+    y_k_vector = result_1 + result_2
+    print("Y(K) vector")
+    print(y_k_vector)
+
+
+CalculateYKVector()
