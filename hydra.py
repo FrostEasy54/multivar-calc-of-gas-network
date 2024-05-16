@@ -33,6 +33,7 @@ s1_x_k_vector = []
 sigma_g_k_vector = []
 p_k_plus_1_vector = []
 p_k_vector = []
+proportion_q_k_pl_1_to_q_k = []
 
 
 class ImageDialog(QDialog):
@@ -381,15 +382,11 @@ class HydraTable():
             incidence_matrix_tr, 0, 0, len(edges_vector), inner_nodes_count)
         matrix_2 = p_k_vector[:inner_nodes_count]
         result_1 = np.dot(matrix_1, matrix_2)
-        print("Результ 1")
-        print(result_1)
         matrix_3 = self.ShiftArray(
             incidence_matrix_tr, 0, inner_nodes_count,
             len(edges_vector), edge_nodes_count)
         matrix_4 = [value for value in pressure_vector if value != 0]
         result_2 = np.dot(matrix_3, matrix_4)
-        print("Результ 2")
-        print(result_2)
         y_k_vector = result_1 + result_2
         print("Y(K) vector")
         print(y_k_vector)
@@ -535,24 +532,51 @@ class HydraTable():
     def IterationProcess(self):
         global Q_k
         global Q_0
+        global Q_k_plus_1
         eps = 1
         count = 1
+        has_greater_than_5 = True
         Q_0 = np.zeros(len(edges_vector))
         while eps > 0.1:
             print(f"Начало итерации--{count}")
-            Q_k = x_k_vector
+            Q_k_plus_1 = x_k_vector
             p_k_vector.clear()
             for value in p_k_plus_1_vector:
                 p_k_vector.append(value)
             self.CalculateIterations(Q_0)
             eps = eps_g
+            Q_k = Q_k_plus_1
             print(f"Конец итерации--{count}")
             count += 1
+        while has_greater_than_5:
+            self.CalculateIterations(Q_k_plus_1)
+            eps = 1
+            while eps > 0.1:
+                print(f"Начало итерации--{count}")
+                Q_k = x_k_vector
+                p_k_vector.clear()
+                for value in p_k_plus_1_vector:
+                    p_k_vector.append(value)
+                self.CalculateIterations(Q_k_plus_1)
+                eps = eps_g
+                print(f"Конец итерации--{count}")
+            has_greater_than_5 = self.HasValueGreaterThan5(Q_k, Q_k_plus_1)
+
+    def HasValueGreaterThan5(self, Q, Q_k_1):
+        proportion_q_k_pl_1_to_q_k.clear()
+        for i, value in enumerate(Q_k_plus_1):
+            proportion_q_k_pl_1_to_q_k.append(abs(1-value)/Q_k[i])
+        for value in proportion_q_k_pl_1_to_q_k:
+            if value > 0.5:
+                return False
+            return True
 
     def CalculateAll(self):
         self.CreateinitialBasic()
         self.CalculateinitialApprox()
         self.IterationProcess()
+        print("Q(k)")
+        print(Q_k)
 
     def ChangeHydraComboBoxContents(self):
         for row in range(self.HydraTableWidget.rowCount()):
