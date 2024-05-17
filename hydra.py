@@ -34,6 +34,8 @@ s1_x_k_vector = []
 sigma_g_k_vector = []
 p_k_plus_1_vector = []
 p_k_vector = []
+q_k_vector = []
+q_k_plus_1_vector = []
 proportion_q_k_pl_1_to_q_k = []
 variant_data = {}
 
@@ -364,8 +366,6 @@ class HydraTable():
         global P0_vector
         matrix_1 = np.array(self.ShiftArray(
             M0_matrix, 0, 0, inner_nodes_count, inner_nodes_count))
-        print("matrix_1")
-        print(matrix_1)
         inverse_matrix_1 = np.linalg.inv(matrix_1)
         matrix_2 = m0_mult_press_vector_plus_Q
         P0_vector = np.dot(inverse_matrix_1, matrix_2)
@@ -465,6 +465,11 @@ class HydraTable():
         print("eps G")
         print(eps_g)
 
+    def CreateQKPlus1Array(self):
+        q_k_plus_1_vector.clear()
+        for value in x_k_vector:
+            q_k_plus_1_vector.append(value)
+
     def CreateinitialBasic(self):
         self.CreateEdgesArray()
         self.CreateIncidenceMatrix()  # нужно чтоб существовал Edges Array
@@ -501,6 +506,7 @@ class HydraTable():
         self.CalculateDeltaPKVector()  # M(k) матрица и sigmaG(k) вектор
         self.CalculatePKPlus1Vector()  # p(k) вектор и delta
         self.CalculateEpsG()  # sigmaG(k)
+        self.CreateQKPlus1Array()  # X(k)
 
     def CalculateIterations(self, Q):
         self.CreateVelocityArray(Q)
@@ -523,55 +529,61 @@ class HydraTable():
         self.CalculateDeltaPKVector()  # M(k) матрица и sigmaG(k) вектор
         self.CalculatePKPlus1Vector()  # p(k) вектор и delta
         self.CalculateEpsG()  # sigmaG(k)
+        self.CreateQKPlus1Array()  # X(k)
 
     def IterationProcess(self):
-        global Q_k
-        global Q_0
-        global Q_k_plus_1
+        global q_0
+        global p_k_vector
+        global proportion_q_k_pl_1_to_q_k
         eps = 1
         count = 1
         has_greater_than_5 = True
         Q_0 = np.zeros(len(edges_vector))
+        # Первичный итерационный процесс
         while eps > 0.1:
             print(f"Начало итерации--{count}")
-            Q_k_plus_1 = x_k_vector
             p_k_vector.clear()
-            for value in p_k_plus_1_vector:
-                p_k_vector.append(value)
+            p_k_vector = p_k_plus_1_vector.copy()
             self.CalculateIterations(Q_0)
             eps = eps_g
-            Q_k = Q_k_plus_1
             print(f"Конец итерации--{count}")
             count += 1
+
+        count = 1
+
+        # Вторичный итерационный процесс
         while has_greater_than_5:
-            self.CalculateIterations(Q_k_plus_1)
+            if count == 1000:
+                break
+            q_k_vector[:] = q_k_plus_1_vector
+            proportion_q_k_pl_1_to_q_k.clear()
+            proportion_q_k_pl_1_to_q_k = [
+                abs(1 - q_k_plus_1_vector[i] / q_k_vector[i]) for i in range(
+                    len(q_k_vector))]
+            self.CalculateIterations(q_k_vector)
             eps = 1
+
             while eps > 0.1:
+                if count == 1000:
+                    break
                 print(f"Начало итерации--{count}")
-                Q_k = x_k_vector
                 p_k_vector.clear()
-                for value in p_k_plus_1_vector:
-                    p_k_vector.append(value)
-                self.CalculateIterations(Q_k_plus_1)
+                p_k_vector = p_k_plus_1_vector.copy()
+                self.CalculateIterations(q_k_vector)
                 eps = eps_g
                 print(f"Конец итерации--{count}")
-            has_greater_than_5 = self.HasValueGreaterThan5(Q_k, Q_k_plus_1)
+                count += 1
 
-    def HasValueGreaterThan5(self, Q, Q_k_1):
-        proportion_q_k_pl_1_to_q_k.clear()
-        for i, value in enumerate(Q_k_plus_1):
-            proportion_q_k_pl_1_to_q_k.append(abs(1-value)/Q_k[i])
-        for value in proportion_q_k_pl_1_to_q_k:
-            if value > 0.5:
-                return False
-            return True
+            has_greater_than_5 = self.HasValueGreaterThan5(
+                proportion_q_k_pl_1_to_q_k)
+
+    def HasValueGreaterThan5(self, vector_1):
+        return any(v1 > 0.5 for v1 in vector_1)
 
     def CalculateAll(self):
         self.CreateinitialBasic()
         self.CalculateinitialApprox()
         self.IterationProcess()
-        print("Q(k)")
-        print(Q_k)
         self.HydraGasVelocity()
         self.ObjectsPressure()
 
@@ -647,8 +659,6 @@ class HydraTable():
         if not self.IsGraphConnected(graph):  # проверка связности графа
             self.ShowTopologyPushButton.setEnabled(False)
             return
-
-        self.ShowTopologyPushButton.setEnabled(True)
         # Визуализация графа
         A = nx.nx_agraph.to_agraph(graph)
         A.layout('dot')

@@ -30,6 +30,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.ActionSaveObjects.triggered.connect(self.ObjectsSaveToCSV)
         self.ActionLoadObjects.triggered.connect(self.ObjectsLoadFromCSV)
         self.ActionObjectsPiezo.triggered.connect(self.PlotPiezo)
+        self.actionClearObjects.triggered.connect(self.ClearObjectsTable)
         # заполнение первой строки
         self.ObjectsTypeComboBox()
         self.ObjectsNumberSpinBox()
@@ -52,6 +53,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
 
         self.ActionSaveHydra.triggered.connect(self.HydraSaveToCSV)
         self.ActionLoadHydra.triggered.connect(self.HydraLoadFromCSV)
+        self.actionClearHydra.triggered.connect(self.ClearHydraTable)
         # заполнение первой строки
         self.HydraBeginningComboBox(0)
         self.HydraEndComboBox(0)

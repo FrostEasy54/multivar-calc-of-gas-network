@@ -415,12 +415,8 @@
     <property name="title">
      <string>Очистить</string>
     </property>
-    <addaction name="actionClearRooms"/>
-    <addaction name="actionClearPeople"/>
-    <addaction name="actionClearEquipment"/>
-    <addaction name="actionClearLamps"/>
-    <addaction name="separator"/>
-    <addaction name="actionClearAll"/>
+    <addaction name="actionClearObjects"/>
+    <addaction name="actionClearHydra"/>
    </widget>
    <widget class="QMenu" name="graphs">
     <property name="title">
@@ -442,14 +438,14 @@
     <string>Закрыть</string>
    </property>
   </action>
-  <action name="actionClearRooms">
+  <action name="actionClearObjects">
    <property name="text">
-    <string>Очистить лист Помещения</string>
+    <string>Очистить Объекты</string>
    </property>
   </action>
-  <action name="actionClearPeople">
+  <action name="actionClearHydra">
    <property name="text">
-    <string>Очистить лист Люди</string>
+    <string>Очистить Гидравлика</string>
    </property>
   </action>
   <action name="actionClearEquipment">
