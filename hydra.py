@@ -841,14 +841,46 @@ class HydraTable():
         print("Data saved to variant_data.json")
 
     def LoadVariantData(self):
-        variant_data = {}
         current_variant = self.VariantComboBox.currentText()
+        if os.path.exists("variant_data.json"):
+            with open("variant_data.json", "r", encoding='utf-8') as json_file:
+                variant_data = json.load(json_file)
+        else:
+            print("No data file found")
+            return
         if current_variant in variant_data:
             data = variant_data[current_variant]
             self.ClearHydraTable()
-        # Заполняем таблицу данными
-            for row, row_data in enumerate(data):
-                self.AddHydraRow()
+            self.ClearObjectsTable()
+            objects_data = data.get("Объекты", {})
+            self.LoadTableData(self.ObjectsTableWidget, objects_data)
+            self.ChangeHydraComboBoxContents()
+            hydra_data = data.get("Гидравлика", {})
+            self.LoadTableData(self.HydraTableWidget, hydra_data)
+
+        else:
+            print(f"No data found for variant {current_variant}")
+
+    def LoadTableData(self, table_widget, table_data):
+        for col, (column_name, column_data) in enumerate(table_data.items()):
+            for row, value in enumerate(column_data):
+                if row >= table_widget.rowCount():
+                    if table_widget == self.HydraTableWidget:
+                        self.AddHydraRow()
+                    elif table_widget == self.ObjectsTableWidget:
+                        self.AddObjectsRow()
+
+                if isinstance(value, (int, float)):
+                    widget = table_widget.cellWidget(row, col)
+                    if isinstance(widget, (QtWidgets.QSpinBox,
+                                           QtWidgets.QDoubleSpinBox)):
+                        widget.setValue(value)
+                    else:
+                        item = QtWidgets.QTableWidgetItem(str(value))
+                        table_widget.setItem(row, col, item)
+                else:
+                    item = QtWidgets.QTableWidgetItem(value)
+                    table_widget.setItem(row, col, item)
 
     def ReadTableData(self, table_widget):
         table_data = {}
