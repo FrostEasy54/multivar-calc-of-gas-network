@@ -38,6 +38,7 @@ q_k_vector = []
 q_k_plus_1_vector = []
 proportion_q_k_pl_1_to_q_k = []
 variant_data = {}
+result_variant_data = {}
 
 
 class ImageDialog(QDialog):
@@ -839,6 +840,7 @@ class HydraTable():
             if row_data:
                 variant_data.setdefault(current_variant, []).append(row_data)
         print(variant_data)
+        self.CreateResultVariantData()
 
     def LoadVariantData(self):
         current_variant = self.VariantComboBox.currentText()
@@ -848,3 +850,7 @@ class HydraTable():
         # Заполняем таблицу данными
             for row, row_data in enumerate(data):
                 self.AddHydraRow()
+
+    def CreateResultVariantData(self):
+        for variant in variant_data:
+            print(variant)
