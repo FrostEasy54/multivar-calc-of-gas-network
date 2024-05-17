@@ -11,6 +11,8 @@ import networkx as nx
 
 import math
 import csv
+import json
+import os
 
 from objects import objects_name_list, objects_dict
 from pipes import pipe_type_dict, roughness_factor_dict
@@ -37,8 +39,6 @@ p_k_vector = []
 q_k_vector = []
 q_k_plus_1_vector = []
 proportion_q_k_pl_1_to_q_k = []
-variant_data = {}
-result_variant_data = {}
 
 
 class ImageDialog(QDialog):
@@ -826,24 +826,22 @@ class HydraTable():
 
     def SaveVariantData(self):
         current_variant = self.VariantComboBox.currentText()
-        for row in range(self.HydraTableWidget.rowCount()):
-            row_data = []
-            for col in range(self.HydraTableWidget.columnCount()):
-                item = self.HydraTableWidget.item(row, col)
-                widget = self.HydraTableWidget.cellWidget(row, col)
-                if widget:
-                    if isinstance(widget, (QtWidgets.QSpinBox, QtWidgets.QDoubleSpinBox)):  # noqa E501
-                        row_data.append(widget.value())
-                    elif isinstance(widget, QtWidgets.QComboBox):
-                        row_data.append(widget.currentText())
-                elif item is not None and item.text():
-                    row_data.append(item.text())
-            if row_data:
-                variant_data.setdefault(current_variant, []).append(row_data)
-        print(variant_data)
-        self.CreateResultVariantData()
+        objects_data = self.ReadTableData(self.ObjectsTableWidget)
+        hydra_data = self.ReadTableData(self.HydraTableWidget)
+        if os.path.exists("variant_data.json"):
+            with open("variant_data.json", "r", encoding='utf-8') as json_file:
+                variant_data = json.load(json_file)
+        else:
+            variant_data = {}
+        variant_data[current_variant] = {
+            "Объекты": objects_data, "Гидравлика": hydra_data}
+        with open("variant_data.json",
+                  "w", encoding='utf-8') as json_file:
+            json.dump(variant_data, json_file, ensure_ascii=False, indent=4)
+        print("Data saved to variant_data.json")
 
     def LoadVariantData(self):
+        variant_data = {}
         current_variant = self.VariantComboBox.currentText()
         if current_variant in variant_data:
             data = variant_data[current_variant]
@@ -852,6 +850,22 @@ class HydraTable():
             for row, row_data in enumerate(data):
                 self.AddHydraRow()
 
-    def CreateResultVariantData(self):
-        for variant in variant_data:
-            print(variant)
+    def ReadTableData(self, table_widget):
+        table_data = {}
+        column_count = table_widget.columnCount()
+        for col in range(column_count):
+            column_name = table_widget.horizontalHeaderItem(col).text()
+            column_data = []
+            for row in range(table_widget.rowCount()):
+                item = table_widget.item(row, col)
+                widget = table_widget.cellWidget(row, col)
+                if widget:
+                    if isinstance(widget, (QtWidgets.QSpinBox,
+                                           QtWidgets.QDoubleSpinBox)):
+                        column_data.append(widget.value())
+                    elif isinstance(widget, QtWidgets.QComboBox):
+                        column_data.append(widget.currentText())
+                elif item is not None and item.text():
+                    column_data.append(item.text())
+            table_data[column_name] = column_data
+        return table_data

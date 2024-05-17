@@ -154,8 +154,9 @@ dmypy.json
 cython_debug/
 
 *.png
-graphs_pic/
 *.csv
+*.json
+graphs_pic/
 .vscode/
 todo
 piezo_pic/
