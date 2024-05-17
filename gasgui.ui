@@ -36,7 +36,7 @@
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="ObjectsWidget">
            <attribute name="title">
@@ -288,19 +288,19 @@
            <layout class="QGridLayout" name="gridLayout_5">
             <item row="0" column="0">
              <widget class="QTableWidget" name="ResultTableWidget">
-              <row>
-               <property name="text">
-                <string>1</string>
-               </property>
-              </row>
               <column>
                <property name="text">
-                <string>Вариант №</string>
+                <string>Название</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Связи</string>
+                <string>Объект с минимальным давлением</string>
+               </property>
+              </column>
+              <column>
+               <property name="text">
+                <string>Участок с наибольшей скоростью</string>
                </property>
               </column>
               <column>
@@ -313,52 +313,14 @@
                 <string>График изменения давления газовой сети</string>
                </property>
               </column>
-              <item row="0" column="0">
-               <property name="text">
-                <string>Вариант 1</string>
-               </property>
-              </item>
-              <item row="0" column="1">
-               <property name="text">
-                <string>ГРП1-&gt;Т1-&gt;П1-&gt;Т2-&gt;П2</string>
-               </property>
-              </item>
-              <item row="0" column="2">
-               <property name="text">
-                <string>Кнопка</string>
-               </property>
-              </item>
-              <item row="0" column="3">
-               <property name="text">
-                <string>Кнопка</string>
-               </property>
-              </item>
              </widget>
             </item>
             <item row="1" column="0">
-             <widget class="QPushButton" name="EquipmentHeatInputPushButton">
+             <widget class="QPushButton" name="GetResultPushButton">
               <property name="text">
-               <string>Рассчитать теплопоступления</string>
+               <string>Получить результаты</string>
               </property>
              </widget>
-            </item>
-            <item row="2" column="0">
-             <layout class="QHBoxLayout" name="EquipmentPushButtonHorizontalLayout">
-              <item>
-               <widget class="QPushButton" name="AddRowEquipmentPushButton">
-                <property name="text">
-                 <string>Добавить строку</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="RemoveRowEquipmentPushButton">
-                <property name="text">
-                 <string>Удалить строку</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </item>
            </layout>
           </widget>

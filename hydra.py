@@ -624,6 +624,7 @@ class HydraTable():
 
     def BuildTopology(self):
         graph = nx.MultiDiGraph()
+        current_variant = self.VariantComboBox.currentText()
         if len(objects_name_list) == 0:
             QMessageBox.warning(None, "Пустой список объектов",
                                 "Список объектов пуст. Добавьте объекты на листе Объекты!")  # noqa E501
@@ -663,7 +664,7 @@ class HydraTable():
         # Визуализация графа
         A = nx.nx_agraph.to_agraph(graph)
         A.layout('dot')
-        filename = f"graphs_pic/topology_{len(graph.edges)}.png"
+        filename = f"graphs_pic/topology_{current_variant}.png"
         A.draw(filename)
         self.ShowTopology(filename)
 

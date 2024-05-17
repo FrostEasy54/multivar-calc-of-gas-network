@@ -1,7 +1,9 @@
 from PyQt6.QtWidgets import QTableWidgetItem, QComboBox
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QFileDialog
 import matplotlib.pyplot as plt
+
 import csv
+import os
 
 objects_name_list = []
 objects_dict = {}
@@ -75,6 +77,7 @@ class ObjectsTable():
     def PlotPiezo(self):
         pressures = []
         objects = []
+        current_variant = self.VariantComboBox.currentText()
         for row in range(self.ObjectsTableWidget.rowCount()):
             object_name = self.ObjectsTableWidget.item(row, 2).text()
             pressure = float(self.ObjectsTableWidget.item(row, 4).text())
@@ -90,6 +93,12 @@ class ObjectsTable():
         for i, (x, y) in enumerate(zip(objects, pressures)):
             plt.text(x, y, f'{y}', ha='left', va='bottom')
         plt.tight_layout()
+        plt.show()
+
+        if not os.path.exists('piezo_pic'):
+            os.makedirs('piezo_pic')
+        file_path = os.path.join('piezo_pic', f"{current_variant}.png")
+        plt.savefig(file_path)
         plt.show()
 
     def ObjectsSaveToCSV(self):

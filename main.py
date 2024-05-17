@@ -4,10 +4,11 @@ from PyQt6.QtWidgets import QMainWindow, QHeaderView, QApplication
 from PyQt6 import uic
 from objects import ObjectsTable
 from hydra import HydraTable
+from results import ResultTable
 ui_path = os.path.abspath(os.path.join(os.path.dirname(__file__), 'gasgui.ui'))
 
 
-class MyGUI(QMainWindow, ObjectsTable, HydraTable):
+class MyGUI(QMainWindow, ObjectsTable, HydraTable, ResultTable):
 
     def __init__(self):
         super(MyGUI, self).__init__()
@@ -16,6 +17,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
             "Многовариантый гидравлический расчет сетей низкого газоснабжения")
         self.ObjectsTableInit()
         self.HydraTableInit()
+        self.ResultTableInit()
 
     # Инициализация таблицы Объекты, все методы с ней писать сюда!
     def ObjectsTableInit(self):
@@ -62,6 +64,11 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable):
         self.HydraPathConsumptionDoubleSpinBox(0)
         self.HydraPipeTypeComboBox(0)
         self.HydraPipeDiameter(0)
+
+    def ResultTableInit(self):
+        self.ResultTableWidget.horizontalHeader().setSectionResizeMode(
+            QHeaderView.ResizeMode.Stretch)
+        self.GetResultPushButton.clicked.connect(self.AddResultRow)
 
 
 def main():
