@@ -77,13 +77,15 @@ class ObjectsTable():
     def PlotPiezo(self):
         pressures = []
         objects = []
+        screen_width = 1600
+        screen_height = 900
         current_variant = self.VariantComboBox.currentText()
         for row in range(self.ObjectsTableWidget.rowCount()):
             object_name = self.ObjectsTableWidget.item(row, 2).text()
             pressure = float(self.ObjectsTableWidget.item(row, 4).text())
             pressures.append(pressure)
             objects.append(object_name)
-        plt.figure()
+        plt.figure(figsize=(screen_width / 100, screen_height / 100))
         plt.plot(objects, pressures, marker='o', linestyle='-', markersize=8)
         plt.xlabel('Узлы')
         plt.ylabel('Давление, Па')

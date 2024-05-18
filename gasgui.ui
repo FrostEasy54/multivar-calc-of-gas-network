@@ -36,7 +36,7 @@
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>0</number>
+           <number>1</number>
           </property>
           <widget class="QWidget" name="ObjectsWidget">
            <attribute name="title">
@@ -234,12 +234,12 @@
               </column>
               <column>
                <property name="text">
-                <string>Давление в начале участка</string>
+                <string>Давление в начале участка, Па</string>
                </property>
               </column>
               <column>
                <property name="text">
-                <string>Давление в конце участка</string>
+                <string>Давление в конце участка, Па</string>
                </property>
               </column>
              </widget>

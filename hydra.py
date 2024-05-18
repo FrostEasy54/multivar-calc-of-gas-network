@@ -175,7 +175,8 @@ class HydraTable():
     def CalculateReynoldsNumber(self):
         Reynolds_number_vector.clear()
         for i in range(len(edges_vector)):
-            Reynolds_number = gas_velocity_vector[i] * \
+            Reynolds_number = abs(
+                gas_velocity_vector[i]) * \
                 pipe_diameter_vector[i] / 1000 / NATURAL_GAS_VISCOSITY
             Reynolds_number_vector.append(Reynolds_number)
 
@@ -587,15 +588,29 @@ class HydraTable():
         self.IterationProcess()
         self.HydraGasVelocity()
         self.ObjectsPressure()
+        self.HydraPressure()
 
     def HydraGasVelocity(self):
         col = 7
         max_index = gas_velocity_vector.index(max(gas_velocity_vector))
         for row in range(self.HydraTableWidget.rowCount()):
-            item = QTableWidgetItem(f"{gas_velocity_vector[row]:.3f}")
+            item = QTableWidgetItem(f"{gas_velocity_vector[row]:.1f}")
             if row == max_index:
                 item.setBackground(QColor(255, 0, 0))
             self.HydraTableWidget.setItem(row, col, item)
+
+    def HydraPressure(self):
+        col = (8, 9)
+        for column in col:
+            for object_row in range(self.ObjectsTableWidget.rowCount()):
+                obj_text = self.ObjectsTableWidget.item(object_row, 2).text()
+                for hydra_row in range(self.HydraTableWidget.rowCount()):
+                    edge_text = self.HydraTableWidget.cellWidget(
+                        hydra_row, column - 7).currentText()
+                    if edge_text == obj_text:
+                        item = QTableWidgetItem(
+                            self.ObjectsTableWidget.item(object_row, 4).text())
+                        self.HydraTableWidget.setItem(hydra_row, column, item)
 
     def ObjectsPressure(self):
         col = 4
