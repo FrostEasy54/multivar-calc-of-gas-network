@@ -9,6 +9,7 @@ from prettytable import PrettyTable
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
+from adjustText import adjust_text
 
 import math
 import csv
@@ -769,18 +770,17 @@ class HydraTable():
     def PlotPiezo(self):
         if longest_path is None:
             QMessageBox.warning(
-                None, "Пустой путь", "Не удалось построить график, так как путь пуст.")
+                None, "Пустой путь",
+                "Не удалось построить график, так как путь пуст.")
             return
-
         pressures = []
         distances = [0]
+        lengths = []
         nodes = []
         diameters = []
         screen_width = 1600
         screen_height = 900
         current_variant = self.VariantComboBox.currentText()
-
-        # Собираем данные о давлении, длине и диаметрах
         for i, node in enumerate(longest_path):
             found = False
             for row in range(self.ObjectsTableWidget.rowCount()):
@@ -794,28 +794,29 @@ class HydraTable():
                     break
             if not found:
                 QMessageBox.warning(None, "Отсутствует узел",
-                                    f"Узел {node} не найден в таблице объектов.")
+                                    f"Узел {node} не найден в таблице объектов.")  # noqa E501
                 return
-
-            if i > 0:
-                for row in range(self.HydraTableWidget.rowCount()):
-                    beginning_object = self.HydraTableWidget.cellWidget(
-                        row, 1).currentText()
-                    end_object = self.HydraTableWidget.cellWidget(
-                        row, 2).currentText()
-                    if (beginning_object == longest_path[i - 1] and end_object == node) or \
-                       (beginning_object == node and end_object == longest_path[i - 1]):
-                        length = self.HydraTableWidget.cellWidget(
-                            row, 3).value()
-                        distances.append(distances[-1] + length)
-
-                        # Получение диаметра трубы
-                        diameter = self.HydraTableWidget.item(row, 6).text()
-                        diameters.append(diameter)
-                        break
-            else:
-                diameters.append('N/A')
-
+            for row in range(self.HydraTableWidget.rowCount()):
+                beginning_object = self.HydraTableWidget.cellWidget(
+                    row, 1).currentText()
+                end_object = self.HydraTableWidget.cellWidget(
+                    row, 2).currentText()
+                if (beginning_object == longest_path[i - 1] and
+                   end_object == node) or (
+                   beginning_object == node and
+                   end_object == longest_path[i - 1]):
+                    length = self.HydraTableWidget.cellWidget(
+                        row, 3).value()
+                    lengths.append(length)
+                    distances.append(distances[-1] + length)
+                    diameter = self.HydraTableWidget.item(row, 6).text()
+                    diameters.append(diameter)
+                    break
+        diameters.append("")
+        lengths.append("")
+        print(nodes)
+        print(pressures)
+        print(lengths)
         plt.figure(figsize=(screen_width / 100, screen_height / 100))
         plt.plot(distances, pressures, marker='o', linestyle='-', markersize=8)
         plt.xlabel('Расстояние (м)')
@@ -823,20 +824,18 @@ class HydraTable():
         plt.title('График перепада давлений')
         plt.grid(True)
         plt.ylim(0, max(pressures) + 500)
-
-        # Увеличение нижнего поля графика
         plt.subplots_adjust(bottom=0.35)
 
-        for i, (dist, pressure, node, diameter) in enumerate(zip(distances, pressures, nodes, diameters)):
-            # Подписи давлений на графике
-            plt.text(dist, pressure, pressure,
-                     ha='center', va='bottom')
-            # Подписи под графиком
-            plt.annotate(f'{node}\nДиаметр участка: {diameter} мм\nДавление в узле: {pressure} Па', (
-                dist, 0), textcoords="offset points", xytext=(0, -70), ha='center', rotation=0)
-
+        texts = []
+        for dist, pressure, node, diameter, length in zip(distances, pressures,
+                                                          nodes, diameters,
+                                                          lengths):
+            texts.append(plt.text(
+                dist, pressure,
+                f'Узел: {node}\nДавление: {pressure} Па\nДлина участка: {length} м\nДиаметр участка: {diameter} мм',  # noqa E501
+                ha='center', va='bottom', rotation=0))
+        adjust_text(texts, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
         plt.tight_layout()
-
         if not os.path.exists('piezo_pic'):
             os.makedirs('piezo_pic')
         file_path = os.path.join('piezo_pic', f"{current_variant}.png")
