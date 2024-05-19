@@ -830,10 +830,18 @@ class HydraTable():
         for dist, pressure, node, diameter, length in zip(distances, pressures,
                                                           nodes, diameters,
                                                           lengths):
-            texts.append(plt.text(
-                dist, pressure,
-                f'Узел: {node}\nДавление: {pressure} Па\nДлина участка: {length} м\nДиаметр участка: {diameter} мм',  # noqa E501
-                ha='center', va='bottom', rotation=0))
+            if length != "":  # Исключаем последний узел из этой части текста
+                next_node_index = nodes.index(node) + 1
+                next_node = nodes[next_node_index]
+                texts.append(plt.text(
+                    dist, pressure,
+                    f'Узел: {node}\nДавление: {pressure} Па\nДлина участка {node}->{next_node}: {length} м\nДиаметр участка {node}->{next_node}: {diameter} мм',   # noqa E501
+                    ha='center', va='bottom', rotation=0))
+            else:
+                texts.append(plt.text(
+                    dist, pressure,
+                    f'Узел: {node}\nДавление: {pressure} Па', ha='center',
+                    va='bottom', rotation=0))
         adjust_text(texts, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
         plt.tight_layout()
         if not os.path.exists('piezo_pic'):
