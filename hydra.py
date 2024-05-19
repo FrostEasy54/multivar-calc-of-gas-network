@@ -8,6 +8,7 @@ from PyQt6 import QtWidgets
 from prettytable import PrettyTable
 import numpy as np
 import networkx as nx
+import matplotlib.pyplot as plt
 
 import math
 import csv
@@ -39,6 +40,7 @@ p_k_vector = []
 q_k_vector = []
 q_k_plus_1_vector = []
 proportion_q_k_pl_1_to_q_k = []
+global longest_path
 
 
 class ImageDialog(QDialog):
@@ -638,6 +640,7 @@ class HydraTable():
                 row, 2).addItems(objects_name_list)
 
     def BuildTopology(self):
+        global longest_path
         graph = nx.MultiDiGraph()
         current_variant = self.VariantComboBox.currentText()
         if len(objects_name_list) == 0:
@@ -674,8 +677,9 @@ class HydraTable():
             return
 
         if not self.IsGraphConnected(graph):  # проверка связности графа
-            self.ShowTopologyPushButton.setEnabled(False)
             return
+        longest_path = self.PiezoGraphPath(graph)
+        print(f"Самый длинный путь от грп до п:\n{longest_path}")
         # Визуализация графа
         A = nx.nx_agraph.to_agraph(graph)
         A.layout('dot')
@@ -728,6 +732,116 @@ class HydraTable():
                     for neighbor in graph.neighbors(current_object):
                         stack.append(neighbor)
         return False
+
+    def PiezoGraphPath(self, graph):
+        grp_nodes = [node for node,
+                     node_type in objects_dict.items() if node_type == "ГРП"]
+        consumer_nodes = [
+            node for node,
+            node_type in objects_dict.items() if node_type == "Потребитель"]
+
+        if not grp_nodes:
+            QMessageBox.warning(None, "Отсутствие ГРП",
+                                "В графе отсутствуют объекты типа ГРП. Добавьте объекты ГРП на листе Объекты!")  # noqa E501
+            return None
+        if not consumer_nodes:
+            QMessageBox.warning(None, "Отсутствие Потребителей",
+                                "В графе отсутствуют объекты типа Потребитель. Добавьте объекты Потребитель на листе Объекты!")  # noqa E501
+            return None
+        longest_path = []
+        max_length = 0
+        for grp_node in grp_nodes:
+            for consumer_node in consumer_nodes:
+                try:
+                    path = nx.shortest_path(
+                        graph, source=grp_node, target=consumer_node)
+                    if len(path) > max_length:
+                        longest_path = path
+                        max_length = len(path)
+                except nx.NetworkXNoPath:
+                    continue
+        if not longest_path:
+            QMessageBox.warning(None, "Нет связи",
+                                "Не удалось найти путь между объектами типа ГРП и Потребитель!")  # noqa E501
+            return None
+        return longest_path
+
+    def PlotPiezo(self):
+        if longest_path is None:
+            QMessageBox.warning(
+                None, "Пустой путь", "Не удалось построить график, так как путь пуст.")
+            return
+
+        pressures = []
+        distances = [0]
+        nodes = []
+        diameters = []
+        screen_width = 1600
+        screen_height = 900
+        current_variant = self.VariantComboBox.currentText()
+
+        # Собираем данные о давлении, длине и диаметрах
+        for i, node in enumerate(longest_path):
+            found = False
+            for row in range(self.ObjectsTableWidget.rowCount()):
+                object_name = self.ObjectsTableWidget.item(row, 2).text()
+                if object_name == node:
+                    pressure = float(
+                        self.ObjectsTableWidget.item(row, 4).text())
+                    pressures.append(pressure)
+                    nodes.append(object_name)
+                    found = True
+                    break
+            if not found:
+                QMessageBox.warning(None, "Отсутствует узел",
+                                    f"Узел {node} не найден в таблице объектов.")
+                return
+
+            if i > 0:
+                for row in range(self.HydraTableWidget.rowCount()):
+                    beginning_object = self.HydraTableWidget.cellWidget(
+                        row, 1).currentText()
+                    end_object = self.HydraTableWidget.cellWidget(
+                        row, 2).currentText()
+                    if (beginning_object == longest_path[i - 1] and end_object == node) or \
+                       (beginning_object == node and end_object == longest_path[i - 1]):
+                        length = self.HydraTableWidget.cellWidget(
+                            row, 3).value()
+                        distances.append(distances[-1] + length)
+
+                        # Получение диаметра трубы
+                        diameter = self.HydraTableWidget.item(row, 6).text()
+                        diameters.append(diameter)
+                        break
+            else:
+                diameters.append('N/A')
+
+        plt.figure(figsize=(screen_width / 100, screen_height / 100))
+        plt.plot(distances, pressures, marker='o', linestyle='-', markersize=8)
+        plt.xlabel('Расстояние (м)')
+        plt.ylabel('Давление, Па')
+        plt.title('График перепада давлений')
+        plt.grid(True)
+        plt.ylim(0, max(pressures) + 500)
+
+        # Увеличение нижнего поля графика
+        plt.subplots_adjust(bottom=0.35)
+
+        for i, (dist, pressure, node, diameter) in enumerate(zip(distances, pressures, nodes, diameters)):
+            # Подписи давлений на графике
+            plt.text(dist, pressure, pressure,
+                     ha='center', va='bottom')
+            # Подписи под графиком
+            plt.annotate(f'{node}\nДиаметр участка: {diameter} мм\nДавление в узле: {pressure} Па', (
+                dist, 0), textcoords="offset points", xytext=(0, -70), ha='center', rotation=0)
+
+        plt.tight_layout()
+
+        if not os.path.exists('piezo_pic'):
+            os.makedirs('piezo_pic')
+        file_path = os.path.join('piezo_pic', f"{current_variant}.png")
+        plt.savefig(file_path)
+        plt.show()
 
     def ClearHydraTable(self):
         edges_vector.clear()

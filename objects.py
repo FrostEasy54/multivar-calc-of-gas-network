@@ -1,9 +1,7 @@
 from PyQt6.QtWidgets import QTableWidgetItem, QComboBox
 from PyQt6.QtWidgets import QSpinBox, QMessageBox, QFileDialog
-import matplotlib.pyplot as plt
 
 import csv
-import os
 
 objects_name_list = []
 objects_dict = {}
@@ -73,35 +71,6 @@ class ObjectsTable():
         self.AddObjectsRow()
         objects_name_list.clear()
         objects_dict.clear()
-
-    def PlotPiezo(self):
-        pressures = []
-        objects = []
-        screen_width = 1600
-        screen_height = 900
-        current_variant = self.VariantComboBox.currentText()
-        for row in range(self.ObjectsTableWidget.rowCount()):
-            object_name = self.ObjectsTableWidget.item(row, 2).text()
-            pressure = float(self.ObjectsTableWidget.item(row, 4).text())
-            pressures.append(pressure)
-            objects.append(object_name)
-        plt.figure(figsize=(screen_width / 100, screen_height / 100))
-        plt.plot(objects, pressures, marker='o', linestyle='-', markersize=8)
-        plt.xlabel('Узлы')
-        plt.ylabel('Давление, Па')
-        plt.title('График перепада давлений')
-        plt.grid(True)
-        plt.ylim(0, max(pressures)+500)
-        for i, (x, y) in enumerate(zip(objects, pressures)):
-            plt.text(x, y, f'{y}', ha='left', va='bottom')
-        plt.tight_layout()
-        plt.show()
-
-        if not os.path.exists('piezo_pic'):
-            os.makedirs('piezo_pic')
-        file_path = os.path.join('piezo_pic', f"{current_variant}.png")
-        plt.savefig(file_path)
-        plt.show()
 
     def ObjectsSaveToCSV(self):
         try:
