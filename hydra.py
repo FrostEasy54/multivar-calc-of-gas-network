@@ -823,14 +823,15 @@ class HydraTable():
         plt.ylabel('Давление, Па')
         plt.title('График перепада давлений')
         plt.grid(True)
+        plt.xlim(-400, max(distances) + 200)
         plt.ylim(0, max(pressures) + 500)
         plt.subplots_adjust(bottom=0.35)
-
+        plt.tight_layout()
         texts = []
         for dist, pressure, node, diameter, length in zip(distances, pressures,
                                                           nodes, diameters,
                                                           lengths):
-            if length != "":  # Исключаем последний узел из этой части текста
+            if length != "":
                 next_node_index = nodes.index(node) + 1
                 next_node = nodes[next_node_index]
                 texts.append(plt.text(
@@ -842,8 +843,9 @@ class HydraTable():
                     dist, pressure,
                     f'Узел: {node}\nДавление: {pressure} Па', ha='center',
                     va='bottom', rotation=0))
+        print("text:")
+        print(texts)
         adjust_text(texts, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
-        plt.tight_layout()
         if not os.path.exists('piezo_pic'):
             os.makedirs('piezo_pic')
         file_path = os.path.join('piezo_pic', f"{current_variant}.png")
@@ -1015,6 +1017,9 @@ class HydraTable():
                         item = QtWidgets.QTableWidgetItem(str(value))
                         table_widget.setItem(row, col, item)
                 else:
+                    widget = table_widget.cellWidget(row, col)
+                    if isinstance(widget, QtWidgets.QComboBox):
+                        widget.setCurrentText(value)
                     item = QtWidgets.QTableWidgetItem(value)
                     table_widget.setItem(row, col, item)
 
