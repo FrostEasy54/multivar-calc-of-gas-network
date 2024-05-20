@@ -5,7 +5,6 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap, QColor
 from PyQt6 import QtWidgets
 
-from prettytable import PrettyTable
 import numpy as np
 import networkx as nx
 import matplotlib.pyplot as plt
@@ -158,7 +157,7 @@ class HydraTable():
         gas_velocity_vector.clear()
         for i in range(len(edges_vector)):
             area = (0.25 * math.pi * (pipe_diameter_vector[i] / 1000) ** 2)
-            velocity = Q_array[i] / (area * 3600)
+            velocity = abs(Q_array[i] / (area * 3600))
             gas_velocity_vector.append(velocity)
         print("V вектор")
         print(gas_velocity_vector)
@@ -266,14 +265,6 @@ class HydraTable():
             incidence_matrix[node1_index, edge_index] = 1
             incidence_matrix[node2_index, edge_index] = -1
         incidence_matrix_tr = incidence_matrix.transpose()
-
-        '''        table = PrettyTable()
-        table.field_names = ['Участки/Узлы'] + objects_name_list
-        for i, row in enumerate(incidence_matrix_tr):
-            table.add_row([f"{edges_vector[i]}"] + list(row))
-        print("Матрица инцидентности")
-        # Выводим таблицу с использованием PrettyTable
-        print(table)'''
 
     def CreateRFactorMatrix(self):
         global R_matrix
