@@ -19,7 +19,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable, ResultTable):
         self.HydraTableInit()
         self.ResultTableInit()
 
-    # Инициализация таблицы Объекты, все методы с ней писать сюда!
+    # Инициализация таблицы Объекты
     def ObjectsTableInit(self):
         self.ObjectsTableWidget.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch)
@@ -39,7 +39,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable, ResultTable):
 
         self.ObjectsTableWidget.cellChanged.connect(self.UpdateObjects)
 
-    # Инициализация таблицы Гидравлика, все методы с ней писать сюда!
+    # Инициализация таблицы Гидравлика
     def HydraTableInit(self):
         self.HydraTableWidget.horizontalHeader().setSectionResizeMode(
             QHeaderView.ResizeMode.Stretch)

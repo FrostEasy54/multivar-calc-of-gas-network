@@ -30,10 +30,8 @@ class ObjectsTable():
         self.UpdateObjects()
 
     def ObjectsNumberSpinBox(self):
-        # Указываем столбец, для которого нужно установить SpinBox
         col = 0
         current_row = self.ObjectsTableWidget.rowCount() - 1
-        # Получаем значение номера помещения из предыдущей строки
         prev_row = self.ObjectsTableWidget.rowCount() - 2
         prev_widget = self.ObjectsTableWidget.cellWidget(prev_row, col)
         prev_value = prev_widget.value() if prev_widget else 0
@@ -43,10 +41,8 @@ class ObjectsTable():
         self.ObjectsTableWidget.setCellWidget(current_row, col, sb)
 
     def ObjectsTypeComboBox(self):
-        # Указываем столбец, для которого нужно установить combobox
         col = 1
         row = self.ObjectsTableWidget.rowCount() - 1
-        # Устанавливаем combobox для каждой ячейки в втором столбце
         objects_type = ["Точка", "Потребитель", "ГРП"]
         cb = QComboBox()
         cb.addItems(objects_type)
