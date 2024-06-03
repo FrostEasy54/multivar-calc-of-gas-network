@@ -14,7 +14,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable, ResultTable):
         super(MyGUI, self).__init__()
         uic.loadUi(ui_path, self)
         self.setWindowTitle(
-            "Многовариантый гидравлический расчет сетей низкого газоснабжения")
+            "Многовариантый гидравлический расчет сетей газоснабжения низкого давления")  # noqa E501
         self.ObjectsTableInit()
         self.HydraTableInit()
         self.ResultTableInit()

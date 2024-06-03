@@ -287,13 +287,14 @@ class HydraTable():
     def CreatePressureArray(self):
         global pressure_vector
         pressure_vector = [3000 if obj_type ==
-                           "ГРП" else 0 for obj_type in objects_dict.values()]
+                           "Источник" else 0
+                           for obj_type in objects_dict.values()]
 
     def CreateNodesCount(self):
         global edge_nodes_count
         global inner_nodes_count
         edge_nodes_count = sum(
-            1 for obj_type in objects_dict.values() if obj_type == "ГРП")
+            1 for obj_type in objects_dict.values() if obj_type == "Источник")
         inner_nodes_count = len(objects_name_list) - edge_nodes_count
 
     def ShiftArray(self, matrix, row_offset, col_offset, height, width):
@@ -535,6 +536,8 @@ class HydraTable():
         Q_0 = np.zeros(len(edges_vector))
         # Первичный итерационный процесс
         while eps > 0.1:
+            if count == 1000:
+                break
             print(f"Начало итерации--{count}")
             p_k_vector.clear()
             p_k_vector = p_k_plus_1_vector.copy()
@@ -609,7 +612,7 @@ class HydraTable():
         min_index = p_k_plus_1_vector.index(min(p_k_plus_1_vector))
         for row in range(self.ObjectsTableWidget.rowCount()):
             if self.ObjectsTableWidget.cellWidget(
-                    row, 1).currentText() == "ГРП":
+                    row, 1).currentText() == "Источник":
                 item = QTableWidgetItem("3000")
             else:
                 if row < len(p_k_plus_1_vector):
@@ -655,16 +658,16 @@ class HydraTable():
                 return
             graph.add_edge(beginning_object, end_object)
 
-        if not self.IsGRPInGraph(graph):  # проверка наличия ГРП в графе
+        if not self.IsGRPInGraph(graph):  # проверка наличия Источник в графе
             QMessageBox.warning(
-                None, "Отсутствие ГРП",
-                "В графе отсутствуют объекты типа ГРП. Добавьте объекты ГРП на листе Объекты!")  # noqa E501
+                None, "Отсутствие Источника",
+                "В графе отсутствуют объекты типа Источник. Добавьте объекты Источник на листе Объекты!")  # noqa E501
             return
 
-        # проверка связи между ГРП и Потребитель
+        # проверка связи между Источник и Потребитель
         if not self.IsConsumerConnected(graph):
             QMessageBox.warning(
-                None, "Нет связи", "Нет связи между объектами типа ГРП и Потребитель!")  # noqa E501
+                None, "Нет связи", "Нет связи между объектами типа Источник и Потребитель!")  # noqa E501
             return
 
         if not self.IsGraphConnected(graph):  # проверка связности графа
@@ -699,13 +702,13 @@ class HydraTable():
 
     def IsGRPInGraph(self, graph):
         for node in graph.nodes():
-            if objects_dict.get(node) == "ГРП":
+            if objects_dict.get(node) == "Источник":
                 return True
         return False
 
     def IsConsumerConnected(self, graph):
         for beginning_object in objects_dict:
-            if objects_dict[beginning_object] == "ГРП":
+            if objects_dict[beginning_object] == "Источник":
                 visited = set()
                 stack = [beginning_object]
 
@@ -800,23 +803,21 @@ class HydraTable():
         plt.ylabel('Давление, Па')
         plt.title('График перепада давлений')
         plt.grid(True)
-        plt.xlim(-400, max(distances) + 200)
-        plt.ylim(0, max(pressures) + 500)
+        plt.xlim(min(distances) - 200, max(distances) + 200)
+        plt.ylim(min(pressures) - 100, max(pressures) + 100)
         plt.subplots_adjust(bottom=0.35)
         plt.tight_layout()
         texts = []
-        for dist, pressure, node, diameter, length in zip(distances,
-                                                          pressures, nodes,
-                                                          diameters, lengths):
-            if length != "":
-                next_node_index = nodes.index(node) + 1
-                next_node = nodes[next_node_index]
-                texts.append(plt.text(
-                    dist, pressure, f'Узел: {node}\nДавление: {pressure} Па\nДлина участка {node}->{next_node}: {length} м\nДиаметр участка {node}->{next_node}: {diameter} мм', ha='center', va='bottom', rotation=0))  # noqa E501
-            else:
-                texts.append(plt.text(
-                    dist, pressure, f'Узел: {node}\nДавление: {pressure} Па',
-                    ha='center', va='bottom', rotation=0))
+        for i, (dist, pressure, node) in enumerate(zip(distances, pressures,
+                                                       nodes)):
+            texts.append(plt.text(dist, pressure, f'{node}\nP: {pressure} Па',
+                                                  ha='center', va='bottom',
+                                                  rotation=0))
+            if i < len(distances) - 1:
+                midpoint = (dist + distances[i + 1]) / 2
+                texts.append(plt.text(midpoint, (pressure + pressures[i + 1]) / 2,  # noqa E501
+                                      f'L: {lengths[i]} м\nDвн: {diameters[i]} мм',  # noqa E501
+                                      ha='center', va='bottom', rotation=0))
         adjust_text(texts, arrowprops=dict(arrowstyle="->", color='r', lw=0.5))
         if not os.path.exists('piezo_pic'):
             os.makedirs('piezo_pic')
@@ -850,7 +851,7 @@ class HydraTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getSaveFileName(
-                None, "Сохранить Гидравлику как файл CSV", "",
+                None, "Сохранить Гидравлика", "",
                 "CSV Files (*.csv);;All Files (*)")
             if path:
                 with open(path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -875,7 +876,7 @@ class HydraTable():
                             [hydra_number, beginning_object, end_object,
                              length, Q, pipe_type])
                 QMessageBox().information(None, "Сохранено",
-                                          f"Данные успешно сохранены в файл CSV: {path}")  # noqa E501
+                                          f"Данные успешно сохранены в файл: {path}")  # noqa E501
         except Exception as e:
             QMessageBox().critical(None, "Ошибка",
                                    f"Произошла ошибка при сохранении: {e}")
@@ -884,7 +885,7 @@ class HydraTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getOpenFileName(
-                None, "Загрузить Гидравлику как файл CSV",
+                None, "Загрузить Гидравлика",
                 "", "CSV Files (*.csv)")
             if path:
                 with open(path, 'r', encoding='utf-8') as csvfile:

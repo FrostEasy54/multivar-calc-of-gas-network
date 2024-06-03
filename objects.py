@@ -43,7 +43,7 @@ class ObjectsTable():
     def ObjectsTypeComboBox(self):
         col = 1
         row = self.ObjectsTableWidget.rowCount() - 1
-        objects_type = ["Точка", "Потребитель", "ГРП"]
+        objects_type = ["Точка", "Потребитель", "Источник"]
         cb = QComboBox()
         cb.addItems(objects_type)
         self.ObjectsTableWidget.setCellWidget(row, col, cb)
@@ -72,7 +72,7 @@ class ObjectsTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getSaveFileName(
-                None, "Сохранить Объекты как файл CSV", "",
+                None, "Сохранить Объекты", "",
                 "CSV Files (*.csv);;All Files (*)")
             if path:
                 with open(path, 'w', newline='', encoding='utf-8') as csvfile:
@@ -89,7 +89,7 @@ class ObjectsTable():
                         writer.writerow(
                             [object_number, object_type, object_name])
                 QMessageBox().information(None, "Сохранено",
-                                          f"Данные успешно сохранены в файл CSV: {path}")  # noqa E501
+                                          f"Данные успешно сохранены в файл: {path}")  # noqa E501
         except Exception as e:
             QMessageBox().critical(None, "Ошибка",
                                    f"Произошла ошибка при сохранении: {e}")
@@ -98,7 +98,7 @@ class ObjectsTable():
         try:
             file_dialog = QFileDialog()
             path, _ = file_dialog.getOpenFileName(
-                None, "Загрузить Объекты из файла CSV",
+                None, "Загрузить Объекты",
                 "", "CSV Files (*.csv)")
             if path:
                 with open(path, 'r', encoding='utf-8') as csvfile:

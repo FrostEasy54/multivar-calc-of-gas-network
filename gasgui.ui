@@ -36,7 +36,7 @@
            <bool>true</bool>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="ObjectsWidget">
            <attribute name="title">
@@ -345,25 +345,25 @@
     <property name="title">
      <string>Файл</string>
     </property>
-    <widget class="QMenu" name="SaveMenu">
+    <widget class="QMenu" name="LoadMenu">
      <property name="enabled">
       <bool>true</bool>
      </property>
-     <property name="title">
-      <string>Сохранить</string>
-     </property>
-     <addaction name="ActionSaveObjects"/>
-     <addaction name="ActionSaveHydra"/>
-    </widget>
-    <widget class="QMenu" name="DownloadMenu">
      <property name="title">
       <string>Загрузить</string>
      </property>
      <addaction name="ActionLoadObjects"/>
      <addaction name="ActionLoadHydra"/>
     </widget>
-    <addaction name="DownloadMenu"/>
+    <widget class="QMenu" name="SaveMenu">
+     <property name="title">
+      <string>Сохранить</string>
+     </property>
+     <addaction name="ActionSaveObjects"/>
+     <addaction name="ActionSaveHydra"/>
+    </widget>
     <addaction name="SaveMenu"/>
+    <addaction name="LoadMenu"/>
    </widget>
    <widget class="QMenu" name="about">
     <property name="title">
@@ -425,12 +425,12 @@
     <string>Очистить Всё</string>
    </property>
   </action>
-  <action name="ActionSaveObjects">
+  <action name="ActionLoadObjects">
    <property name="enabled">
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Сохранить Объекты</string>
+    <string>Загрузить Объекты</string>
    </property>
   </action>
   <action name="ActionSavePeople">
@@ -465,9 +465,9 @@
     <string>Сохранить все Листы в единый файл</string>
    </property>
   </action>
-  <action name="ActionLoadObjects">
+  <action name="ActionSaveObjects">
    <property name="text">
-    <string>Загрузить Объекты</string>
+    <string>Сохранить Объекты</string>
    </property>
   </action>
   <action name="ActionImportPeople">
@@ -513,14 +513,14 @@
     <string>Нормативные документы</string>
    </property>
   </action>
-  <action name="ActionSaveHydra">
-   <property name="text">
-    <string>Сохранить Гидравлика</string>
-   </property>
-  </action>
   <action name="ActionLoadHydra">
    <property name="text">
     <string>Загрузить Гидравлика</string>
+   </property>
+  </action>
+  <action name="ActionSaveHydra">
+   <property name="text">
+    <string>Сохранить Гидравлика</string>
    </property>
   </action>
  </widget>
