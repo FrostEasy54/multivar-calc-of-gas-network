@@ -385,6 +385,7 @@
      <string>Графики</string>
     </property>
     <addaction name="ActionObjectsPiezo"/>
+    <addaction name="ActionMultivarPiezo"/>
    </widget>
    <addaction name="menu"/>
    <addaction name="clear"/>
@@ -521,6 +522,11 @@
   <action name="ActionSaveHydra">
    <property name="text">
     <string>Сохранить Гидравлика</string>
+   </property>
+  </action>
+  <action name="ActionMultivarPiezo">
+   <property name="text">
+    <string>Многовариантный пьезометр</string>
    </property>
   </action>
  </widget>

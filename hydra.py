@@ -641,7 +641,6 @@ class HydraTable():
             QMessageBox.warning(None, "Пустой список объектов",
                                 "Список объектов пуст. Добавьте объекты на листе Объекты!")  # noqa E501
             return
-
         graph.add_nodes_from(objects_name_list)
         for row in range(self.HydraTableWidget.rowCount()):
             beginning_object_widget = self.HydraTableWidget.cellWidget(row, 1)
@@ -663,13 +662,11 @@ class HydraTable():
                 None, "Отсутствие Источника",
                 "В графе отсутствуют объекты типа Источник. Добавьте объекты Источник на листе Объекты!")  # noqa E501
             return
-
         # проверка связи между Источник и Потребитель
         if not self.IsConsumerConnected(graph):
             QMessageBox.warning(
                 None, "Нет связи", "Нет связи между объектами типа Источник и Потребитель!")  # noqa E501
             return
-
         if not self.IsGraphConnected(graph):  # проверка связности графа
             return
         # Визуализация графа
@@ -801,7 +798,7 @@ class HydraTable():
         plt.plot(distances, pressures, marker='o', linestyle='-', markersize=8)
         plt.xlabel('Расстояние (м)')
         plt.ylabel('Давление, Па')
-        plt.title('График перепада давлений')
+        plt.title('Пьезометрический график')
         plt.grid(True)
         plt.xlim(min(distances) - 200, max(distances) + 200)
         plt.ylim(min(pressures) - 100, max(pressures) + 100)
@@ -822,6 +819,138 @@ class HydraTable():
         if not os.path.exists('piezo_pic'):
             os.makedirs('piezo_pic')
         file_path = os.path.join('piezo_pic', f"{current_variant}.png")
+        plt.savefig(file_path)
+        plt.show()
+
+    def PlotMultiPiezo(self):
+        variants = [self.VariantComboBox.itemText(i) for i in range(
+            self.VariantComboBox.count())]
+
+        if not variants:
+            QMessageBox.warning(None, "Нет вариантов",
+                                "Не найдено ни одного варианта.")
+            return
+
+        nodes = [self.ObjectsTableWidget.item(row, 2).text() for row in range(
+            self.ObjectsTableWidget.rowCount())]
+        start_node, ok1 = QInputDialog.getItem(None, "Выбор начальной точки",
+                                               "Выберите начальную точку:",
+                                               nodes, 0, False)
+        if not ok1:
+            return
+        end_node, ok2 = QInputDialog.getItem(None, "Выбор конечной точки",
+                                             "Выберите конечную точку:",
+                                             nodes, 0, False)
+        if not ok2:
+            return
+        if start_node == end_node:
+            QMessageBox.warning(None, "Неправильный выбор",
+                                "Начальная и конечная точки не могут совпадать.")  # noqa E501
+            return
+
+        if os.path.exists("variant_data.json"):
+            with open("variant_data.json", "r", encoding='utf-8') as json_file:
+                variant_data = json.load(json_file)
+        else:
+            QMessageBox.warning(None, "Нет данных",
+                                "Файл variant_data.json не найден.")
+            return
+
+        screen_width = 1600
+        screen_height = 900
+        fig, ax = plt.subplots(figsize=(
+            screen_width / 100, screen_height / 100))
+
+        table_data = []
+        headers = ["Вариант", "Узел", "Давление (Па)", "Длина (м)",
+                   "Диаметр (мм)"]
+
+        for variant in variants:
+            if variant not in variant_data:
+                continue
+
+            graph = nx.Graph()
+            hydra_data = variant_data[variant]["Гидравлика"]
+            for i in range(len(hydra_data["№ Участка"])):
+                beginning_object = hydra_data["Начало участка"][i]
+                end_object = hydra_data["Конец участка"][i]
+                try:
+                    length = float(hydra_data["L, м"][i])
+                except ValueError:
+                    QMessageBox.warning(None, "Ошибка данных",
+                                        f"Некорректное значение длины участка в варианте {variant} для участка {i+1}.")  # noqa E501
+                    continue
+                graph.add_edge(beginning_object, end_object, length=length)
+
+            if start_node not in graph or end_node not in graph:
+                QMessageBox.warning(None, "Узел не найден",
+                                    f"Узел {start_node} или {end_node} не найден в варианте {variant}.")  # noqa E501
+                continue
+
+            longest_path = self.PiezoGraphPath(graph, start_node, end_node)
+            if longest_path is None:
+                continue
+
+            pressures = []
+            distances = [0]
+            lengths = []
+            nodes = []
+            diameters = []
+
+            objects_data = variant_data[variant]["Объекты"]
+            for i, node in enumerate(longest_path):
+                if node not in objects_data["Условное обозначение"]:
+                    QMessageBox.warning(None, "Отсутствует узел", f"Узел {node} не найден в варианте {variant}.")  # noqa E501
+                    return
+                index = objects_data["Условное обозначение"].index(node)
+                pressure = float(objects_data["P(ф), Па"][index])
+                pressures.append(pressure)
+                nodes.append(node)
+
+                if i > 0:
+                    for j in range(len(hydra_data["№ Участка"])):
+                        beginning_object = hydra_data["Начало участка"][j]
+                        end_object = hydra_data["Конец участка"][j]
+                        if (beginning_object == longest_path[i - 1]
+                           and end_object == node) or (
+                           beginning_object == node
+                           and end_object == longest_path[i - 1]):
+                            length = float(hydra_data["L, м"][j])
+                            lengths.append(length)
+                            distances.append(distances[-1] + length)
+                            diameter = hydra_data["Диаметр трубы, мм"][j]
+                            diameters.append(diameter)
+                            break
+
+            diameters.append("Н/Д")
+            lengths.append("Н/Д")
+            ax.plot(distances, pressures, marker='o', linestyle='-',
+                    markersize=8, label=f'{variant}')
+
+            for i, node in enumerate(nodes):
+                table_data.append([variant, node, pressures[i], lengths[i]
+                                  if i < len(lengths) else '',
+                                  diameters[i] if i < len(diameters) else ''])
+
+        ax.set_xlabel('Расстояние (м)')
+        ax.set_ylabel('Давление, Па')
+        ax.set_title('Пьезометрический график для нескольких вариантов')
+        ax.grid(True)
+        ax.legend()
+
+        table = ax.table(cellText=table_data, colLabels=headers,
+                         cellLoc='center', loc='bottom',
+                         bbox=[0, -0.9, 1, 0.8])
+        table.auto_set_font_size(False)
+        table.set_fontsize(12)
+        table.scale(1.5, 1.5)
+
+        plt.subplots_adjust(left=0.1, right=0.9, top=0.9,
+                            bottom=0.4)
+        plt.tight_layout()
+        if not os.path.exists('piezo_pic'):
+            os.makedirs('piezo_pic')
+        file_path = os.path.join('piezo_pic', "multi_variant_piezo.png")
         plt.savefig(file_path)
         plt.show()
 

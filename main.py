@@ -32,6 +32,7 @@ class MyGUI(QMainWindow, ObjectsTable, HydraTable, ResultTable):
         self.ActionSaveObjects.triggered.connect(self.ObjectsSaveToCSV)
         self.ActionLoadObjects.triggered.connect(self.ObjectsLoadFromCSV)
         self.ActionObjectsPiezo.triggered.connect(self.PlotPiezo)
+        self.ActionMultivarPiezo.triggered.connect(self.PlotMultiPiezo)
         self.actionClearObjects.triggered.connect(self.ClearObjectsTable)
         # заполнение первой строки
         self.ObjectsTypeComboBox()
