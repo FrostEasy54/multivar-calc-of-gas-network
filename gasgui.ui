@@ -365,14 +365,6 @@
     <addaction name="SaveMenu"/>
     <addaction name="LoadMenu"/>
    </widget>
-   <widget class="QMenu" name="about">
-    <property name="title">
-     <string>Справка</string>
-    </property>
-    <addaction name="actionTutorial"/>
-    <addaction name="actionAuthors"/>
-    <addaction name="actionNormativeDocs"/>
-   </widget>
    <widget class="QMenu" name="clear">
     <property name="title">
      <string>Очистить</string>
@@ -390,7 +382,6 @@
    <addaction name="menu"/>
    <addaction name="clear"/>
    <addaction name="graphs"/>
-   <addaction name="about"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="close_file">
